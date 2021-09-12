@@ -1,5 +1,5 @@
 #include <vector>
-#include "TokenPair.hpp"
+#include "../utils/TokenPair.hpp"
 
 class Scanner
 {
