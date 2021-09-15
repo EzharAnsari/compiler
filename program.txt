@@ -1,13 +1,6 @@
-
-let
-	var number : int := 8;
-	var loopCounter : int;
-	var result : int := 1;
-in
-	for loopCounter := 1 to number
-	do
-		result := result * loopCounter;
-	enddo;
-
-	printi(result);
-end
+main()
+{
+	int a,b;
+	c=1234;
+	a<=c
+}
