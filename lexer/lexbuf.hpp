@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <variant>
 
 #ifndef LEXBUF_H
 #define LEXBUF_H
@@ -10,6 +11,17 @@ struct position
   int lnum = 0;
   int cnum = 0;
   int bol = 0;
+};
+
+enum class kind {
+  let, integer, identifier, eof,  // there are many lefts
+};
+
+struct token {
+  enum kind kind;
+  std::variant<string, int> attribute;
+  position start;
+  position end;
 };
 
 class lexbuf
