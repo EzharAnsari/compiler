@@ -1,4 +1,4 @@
-let romanNo = "MCXI";
+let romanNo = "xlii";
 
 let indx = 0;
 let result = 0;
@@ -11,13 +11,13 @@ function parsar() {
 }
 
 function thousand() {
-  if (romanNo[indx] === 'M') {
+  if (romanNo[indx] === 'm') {
     indx += 1;
     result += 1000;
-    if (romanNo[indx] === 'M') {
+    if (romanNo[indx] === 'm') {
       indx += 1;
       result += 1000;
-      if (romanNo[indx] === 'M') {
+      if (romanNo[indx] === 'm') {
         indx += 1;
         result += 1000;
       }
@@ -27,13 +27,13 @@ function thousand() {
 
 function hundred() {
  
-  if(romanNo[indx] === 'C') {
-    if (romanNo[indx + 1] === 'D') {
+  if(romanNo[indx] === 'c') {
+    if (romanNo[indx + 1] === 'd') {
       indx += 2;
       result += 400;
     }
 
-    else if (romanNo[indx + 1] === 'M') {
+    else if (romanNo[indx + 1] === 'm') {
       indx += 2;
       result += 900;
     }
@@ -43,7 +43,7 @@ function hundred() {
     }
   }
 
-  else if (romanNo[indx] === 'D') {
+  else if (romanNo[indx] === 'd') {
     indx += 1;
     result += 500;
     smallHundred();
@@ -51,13 +51,13 @@ function hundred() {
 }
 
 function smallHundred() {
-  if (romanNo[indx] === 'C') {
+  if (romanNo[indx] === 'c') {
     indx += 1;
     result += 100;
-    if (romanNo[indx] === 'C') {
+    if (romanNo[indx] === 'c') {
       indx += 1;
       result += 100;
-      if (romanNo[indx] === 'C') {
+      if (romanNo[indx] === 'c') {
         indx += 1;
         result += 100;
       }
@@ -67,13 +67,13 @@ function smallHundred() {
 
 function ten() {
  
-  if(romanNo[indx] === 'X') {
-    if (romanNo[indx + 1] === 'L') {
+  if(romanNo[indx] === 'x') {
+    if (romanNo[indx + 1] === 'l') {
       indx += 2;
       result += 40;
     }
     
-    else if (romanNo[indx + 1] === 'C') {
+    else if (romanNo[indx + 1] === 'c') {
       indx += 2;
       result += 90;
     }
@@ -81,7 +81,7 @@ function ten() {
     else smallTen();
   }
 
-  else if (romanNo[indx] === 'L') {
+  else if (romanNo[indx] === 'l') {
     indx += 1;
     result += 50;
     smallTen();
@@ -90,13 +90,13 @@ function ten() {
 }
 
 function smallTen() {
-  if (romanNo[indx] === 'X') {
+  if (romanNo[indx] === 'x') {
     indx += 1;
     result += 10;
-    if (romanNo[indx] === 'X') {
+    if (romanNo[indx] === 'x') {
       indx += 1;
       result += 10;
-      if (romanNo[indx] === 'X') {
+      if (romanNo[indx] === 'x') {
         indx += 1;
         result += 10;
       }
@@ -106,13 +106,13 @@ function smallTen() {
 
 function digit() {
  
-  if(romanNo[indx] === 'I') {
-    if (romanNo[indx + 1] === 'V') {
+  if(romanNo[indx] === 'i') {
+    if (romanNo[indx + 1] === 'v') {
       indx += 2;
       result += 4;
     }
     
-    else if (romanNo[indx + 1] === 'X') {
+    else if (romanNo[indx + 1] === 'x') {
       indx += 2;
       result += 9;
     }
@@ -122,7 +122,7 @@ function digit() {
     }
   }
 
-  else if (romanNo[indx] === 'V') {
+  else if (romanNo[indx] === 'v') {
     indx += 1;
     result += 5;
     smallDigit();
@@ -131,13 +131,13 @@ function digit() {
 }
 
 function smallDigit() {
-  if (romanNo[indx] === 'I') {
+  if (romanNo[indx] === 'i') {
     indx += 1;
     result += 1;
-    if (romanNo[indx] === 'I') {
+    if (romanNo[indx] === 'i') {
       indx += 1;
       result += 1;
-      if (romanNo[indx] === 'I') {
+      if (romanNo[indx] === 'i') {
         indx += 1;
         result += 1;
       }
