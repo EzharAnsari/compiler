@@ -1,0 +1,18 @@
+romanNum -> thousand hundred ten digit
+thousand -> M | MM | MMM | ε
+hundred -> smallHundred | C D | D smallHundred | C M
+smallHundred -> C | CC | CCC | ε
+ten -> smallTen | X L | L smallTen | X C
+smallTen -> X | XX | XXX  | ε
+digit -> smallDigit | I V | V smallDigit | I X
+smallDigit -> I | II | III | ε
+
+
+remove left recursion
+write a program to 
+
+rest -> + term { print('+')  } rest | - term { print('-') } rest | e
+
+term 0 ( prinr('0') )
+term. -. 1 { prim('^') } (2.14)
+Figure 2.21 shows how 9-5+2
