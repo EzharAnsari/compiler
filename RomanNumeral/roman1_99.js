@@ -5,7 +5,8 @@ let lookahead;
 // let result = 0;
 
 function s() {
-  lookahead = lexer();
+  lookahead = lexer();  // i
+  console.log(lookahead);
   switch(lookahead) {
     case "x":
       match("x"); T(); U();
@@ -41,6 +42,10 @@ function X() {
   }
 }
 
+  //  U -> iY | vI | I
+
+// ii 4 or ix
+
 function U() {
   switch(lookahead) {
     case "i":
@@ -67,6 +72,7 @@ function Y() {
 }
 
 function I() {
+  console.log(lookahead);
   switch(lookahead) {
     case "i":
       match("i"); I();
@@ -86,7 +92,7 @@ function match(c) {
   if (lookahead === c) {
     console.log(lookahead);
     console.log(indx);
-    lookahead = lexer();
+    lookahead = lexer();  // ii = i ->i
   }
   else {
     console.log("Syntax error");
