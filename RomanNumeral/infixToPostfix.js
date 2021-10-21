@@ -57,7 +57,7 @@ class Position {
     this.ftxt = ftxt;
   }
 
-  advance(currnet_char) {
+  next_pos(currnet_char) {
     this.idx += 1;
     this.col += 1;
 
@@ -98,11 +98,11 @@ class Lexer {
     this.fn = fn;
     this.pos = new Position(-1, 0, -1, fn, text);
     this.currnet_char = null;
-    this.advance();
+    this.next_char();
   }
 
-  advance() {
-    this.pos.advance(this.currnet_char);
+  next_char() {
+    this.pos.next_pos(this.currnet_char);
     if (this.pos.idx < this.text.length) {
       this.currnet_char = this.text[this.pos.idx];
     }
@@ -123,63 +123,101 @@ class Lexer {
       else {
         num_str += this.currnet_char;
       }
-      this.advance();
+      this.next_char();
     }
     if (dot_count === 0) {
-      return new Token(TT_INT, parseInt(num_str));
+      let result = {
+        token: new Token(TT_INT, parseInt(num_str)),
+        error: null
+      }
+      return result;
     }
     else {
-      return new Token(TT_FLOAT, parseFloat(num_str));
+      let result = {
+        token: new Token(TT_FLOAT, parseFloat(num_str)),
+        error: null
+      }
+      return result;
     }
   }
 
-  make_tokens() {
-    let tokens = [];
+  get_token() {
 
-    while(this.currnet_char != null) {
-      if (this.currnet_char === ' ' || this.currnet_char === '\t' || this.currnet_char === '\n')
-        this.advance();
+    if (this.currnet_char === null) {
+      let result = {
+        token: new Token(TT_EOF),
+        error: null
+      }
+      return result;
+    }
+
+    else if(this.currnet_char != null) {
+      if (this.currnet_char === ' ' || this.currnet_char === '\t' || this.currnet_char === '\n') {
+        this.next_char();
+        return this.get_token();
+      }
       else if (DIGITS.includes(this.currnet_char)) {
-        tokens.push(this.make_number());
+        return this.make_number();
       }
       else if (this.currnet_char === '+') {
-        tokens.push(new Token(TT_PLUS));
-        this.advance();
+        this.next_char();
+        let result = {
+          token: new Token(TT_PLUS),
+          error: null
+        }
+        return result;
       }
       else if (this.currnet_char === '-') {
-        tokens.push(new Token(TT_MINUS));
-        this.advance();
+        this.next_char();
+        let result = {
+          token: new Token(TT_MINUS),
+          error: null
+        }
+        return result;
       }
       else if (this.currnet_char === '/') {
-        tokens.push(new Token(TT_DIV));
-        this.advance();
+        this.next_char();
+        let result = {
+          token: new Token(TT_DIV),
+          error: null
+        }
+        return result;
       }
       else if (this.currnet_char === '*') {
-        tokens.push(new Token(TT_MUL));
-        this.advance();
+        this.next_char();
+        let result = {
+          token: new Token(TT_MUL),
+          error: null
+        }
+        return result;
       }
       else if (this.currnet_char === '(') {
-        tokens.push(new Token(TT_LPAREN));
-        this.advance();
+        this.next_char();
+        let result = {
+          token: new Token(TT_LPAREN),
+          error: null
+        }
+        return result;
       }
       else if (this.currnet_char === ')') {
-        tokens.push(new Token(TT_RPAREN));
-        this.advance();
+        this.next_char();
+        let result = {
+          token: new Token(TT_RPAREN),
+          error: null
+        }
+        return result;
       }
       else {
         let pos_start = this.pos.copy();
         let char = this.currnet_char;
-        this.advance();
+        this.next_char();
         let result = {
-          tokens: [],
+          token: null,
           error: new IllegalCharError(pos_start, this.pos, `' ${char} '`)
         }
         return result;
       }
     }
-
-    let result = {tokens, error: null};
-    return result;
   }
 }
 
@@ -206,35 +244,53 @@ class ParserResult {
 
 // ********************* Parser ************************ //
 class Parser{
-  constructor(tokens) {
-    this.tokens = tokens;
-    this.tok_idx = -1;
-    this.advance();
+  constructor(str) {
+    this.lexer = new Lexer('<stdio>', str);
   }
-  advance(){
-    this.tok_idx += 1;
-    if (this.tok_idx < this.tokens.length) {
-      this.currnet_tok = this.tokens[this.tok_idx];
+
+  next_token() {
+    let lexerResult = this.lexer.get_token();
+    if (lexerResult.error) {
+      console.log(lexerResult.error);
+      return null;
     }
-    return this.currnet_tok;
+    return lexerResult.token;
+  }
+
+  match(type){
+    if (this.lookahead.type === type) {
+      this.lookahead = this.next_token();
+    }
+    else {
+      console.log("Syntax Error");
+    }
   }
   parse() {
+    this.lookahead = this.next_token();
     let res = this.expr();
     return res;
   }
+
   factor() {
-    let tok = this.currnet_tok;
-    if (tok.type === TT_INT || tok.type === TT_FLOAT) {
-      this.advance();
-      return new NumberNode(tok);
+    let tok = this.lookahead;
+    console.log(tok);
+    switch(tok.type) {
+      case TT_LPAREN:
+        this.match(TT_LPAREN); let result = this.expr(); this.match(TT_RPAREN); return result;
+      case TT_INT:
+        this.match(TT_INT); return new NumberNode(tok);
+      case TT_FLOAT:
+        this.match(TT_FLOAT); return new NumberNode(tok);
+      default:
+        console.log("Syntax Error"); 
     }
   }
   term() {
     let left = this.factor();
-    while(this.currnet_tok.type === TT_MUL || this.currnet_tok.type === TT_DIV) {
-      let op_tok = this.currnet_tok;
-      this.advance();
-      let right = this.factor();
+    if (this.lookahead.type === TT_MUL || this.lookahead.type === TT_DIV) {
+      let op_tok = this.lookahead;
+      this.match(this.lookahead.type);
+      let right = this.term();
 
       // infix notation to prefix
       // console.log(op_tok, left, right);
@@ -248,9 +304,9 @@ class Parser{
   }
   expr() {
     let left = this.term();
-    while(this.currnet_tok.type === TT_PLUS || this.currnet_tok.type === TT_MINUS) {
-      let op_tok = this.currnet_tok;
-      this.advance();
+    if (this.lookahead.type === TT_PLUS || this.lookahead.type === TT_MINUS) {
+      let op_tok = this.lookahead;
+      this.match(this.lookahead.type);
       let right = this.expr();
 
       // infix notation to prefix
@@ -265,14 +321,8 @@ class Parser{
   }
 }
 
-let string = '123 *d 524'
-let lexer = new Lexer('<stdin>', string);
-let lexerResult = lexer.make_tokens();
+let string = '(1+2)*3'
 
-if (lexerResult.error) {
-  console.log(lexerResult.error);
-  return;
-}
-let parser = new Parser(lexerResult.tokens);
-let ast = parser.parse();
+let p = new Parser(string);
+let ast = p.parse();
 console.log(ast);
