@@ -1,11 +1,24 @@
 /*
 * expr -> term + expr
     | term - expr
+    | term
 	term -> factor * term
     | factor / term
+    | factor
 	fector -> ( expr )
     | INT
     | FLOAT
+*/
+/*
+* expr -> term { left = term.val } + { operation = '+' } expr { right = expr.val }  { return binaryOperationNode(left, operation, right) }
+    |  term { left = term.val } - { operation = '-' } expr { right = expr.val }  { return binaryOperationNode(left, operation, right) }
+    | term { return term.val }
+	term -> factor { left = factor.val } * { operation = '*' } expr { right = term.val }  { return binaryOperationNode(left, operation, right) }
+	  | factor { left = factor.val } / { operation = '/' } expr { right = term.val }  { return binaryOperationNode(left, operation, right) }
+    | factor { return factor.val}
+	fector -> ( expr )  { return expr.val }
+    | INT { return INTTokenNode } 
+    | FLOAT  { return FLOATTokenNode }
 */
 
 // ********************* Digit ************************ //
@@ -15,12 +28,12 @@ let DIGITS = '0123456789';
 // ********************* Tokens ************************ //
 TT_INT			= 'INT'
 TT_FLOAT    = 'FLOAT'
-TT_PLUS     = 'PLUS'
-TT_MINUS    = 'MINUS'
-TT_MUL      = 'MUL'
-TT_DIV      = 'DIV'
-TT_LPAREN   = 'LPAREN'
-TT_RPAREN   = 'RPAREN'
+TT_PLUS     = '+'
+TT_MINUS    = '-'
+TT_MUL      = '*'
+TT_DIV      = '/'
+TT_LPAREN   = '('
+TT_RPAREN   = ')'
 TT_EOF			= 'EOF'
 
 // ********************* ERROR ************************ //
@@ -237,6 +250,89 @@ class BinOpNode {
     this.opTok = opTok;
     this.rightNode = rightNode;
   }
+
+  asInfixNotation () {                              // (left operator right)
+    let result = '(';
+    // for left operand
+    if (this.leftNode instanceof BinOpNode) {
+      result += this.leftNode.asInfixNotation();
+    }
+    else if (this.leftNode instanceof NumberNode) {
+      result += this.leftNode.tok.value;
+    }
+
+    // for operator
+    result += ` ${this.opTok.type} `;
+
+    // for right operand
+    if (this.rightNode instanceof BinOpNode) {
+      result += this.rightNode.asInfixNotation();
+      result += ')';
+    }
+    else if (this.rightNode instanceof NumberNode) {
+      result += this.rightNode.tok.value;
+      result += ')';
+    }
+
+    return result; 
+  }
+
+  asPrefixNotation () {                            //  operator ( left, right)
+
+    // for operator
+    let result = `${this.opTok.type} ( `;
+
+    // for left operand
+    if (this.leftNode instanceof BinOpNode) {
+      result += this.leftNode.asPrefixNotation();
+      result += ', ';
+    }
+    else if (this.leftNode instanceof NumberNode) {
+      result += this.leftNode.tok.value;
+      result += ', ';
+    }
+
+    // for right operand
+    if (this.rightNode instanceof BinOpNode) {
+      result += this.rightNode.asPrefixNotation();
+      result += ')';
+    }
+    else if (this.rightNode instanceof NumberNode) {
+      result += this.rightNode.tok.value;
+      result += ')';
+    }
+
+    return result;
+  }
+
+  asPostfixNotation () {                         //  (left, right) operator
+    let result = '(';
+
+    // for left operand
+    if (this.leftNode instanceof BinOpNode) {
+      result += this.leftNode.asPostfixNotation();
+      result += ', ';
+    }
+    else if (this.leftNode instanceof NumberNode) {
+      result += this.leftNode.tok.value;
+      result += ', ';
+    }
+
+    // for right operand
+    if (this.rightNode instanceof BinOpNode) {
+      result += this.rightNode.asPostfixNotation();
+      result += ') ';
+    }
+    else if (this.rightNode instanceof NumberNode) {
+      result += this.rightNode.tok.value;
+      result += ') ';
+    }
+
+    // for operator
+    result += `${this.opTok.type}`;
+
+    return result;
+  }
 }
 
 class UnaryOpNode {
@@ -302,9 +398,6 @@ class Parser{
   parse() {
     this.lookahead = this.getToken();
     let res = this.expr();
-    if (!res.error && this.lookahead.type != TT_EOF) {
-      return res.failure(InvalidSyntaxError())
-    }
     return res;
   }
 
@@ -328,6 +421,11 @@ class Parser{
     }
   }
   term() {
+    // print("*") } term * expr
+    // print("/") } term / expr
+
+    let temToken = this.lookahead;
+
     let left = this.factor();
     if (this.lookahead.type === TT_MUL || this.lookahead.type === TT_DIV) {
       let opTok = this.lookahead;
@@ -345,6 +443,9 @@ class Parser{
     return left;
   }
   expr() {
+    // print("+") } term + expr
+    // print("-") } term - expr
+
     let left = this.term();
     if (this.lookahead.type === TT_PLUS || this.lookahead.type === TT_MINUS) {
       let opTok = this.lookahead;
@@ -363,8 +464,12 @@ class Parser{
   }
 }
 
-let string = '+1+2'
+let string = '1'
 
 let p = new Parser(string);
 let ast = p.parse();
 console.log(ast);
+// console.log('Given String -> ' + string);
+// console.log('Infix Notation -> ' + ast.asInfixNotation());
+// console.log('Postfix Notation -> ' + ast.asPostfixNotation());
+// console.log('Prefix Notation -> ' + ast.asPrefixNotation());
