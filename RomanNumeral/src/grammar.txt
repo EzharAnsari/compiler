@@ -1,0 +1,52 @@
+
+LINE -> from TABLE where COND select COLUMNLIST
+    | from TABLE select COLUMNLIST
+    | from TABLE JOINCONDITION
+    | from TABLE JOINCONDITION order by COLUMNLIST
+
+TABLE -> id     // from Orders
+    | id space id  // from Orders order ( tableName and its nickName )
+
+COLUMNLIST -> IDENTIFIERS | * | OBJECTTYPECOLUMN
+
+OBJECTTYPECOLUMN -> TABLE '.' id    //  Orders.OrderId, Customers.CustomerName
+    | TABLE '.' id ',' OBJECTTYPECOLUMN
+    | TABLE '.' id ',' as id   //  b.id, b.title, e.last_name AS editor
+
+IDENTIFIERS -> id
+  | id ',' IDENTIFIERS
+
+CONDITION -> OBJECT OPRATOR CONSTANT
+  | OBJECT OPRATOR CONSTANT LOGICALOPERATOR CONDITION
+  | ( CONDITION LOGICALOPERATOR CONDITION )
+  | OBJECT in ARRAYOFCONSTANT
+
+CONSTANT -> string
+  | int
+  | float
+
+ARRAYOFCONSTANT -> CONSTANT
+  | CONSTANT ',' ARRAYOFCONSTANT
+
+OPRATOR -> '<'
+  | '='
+  | '>'
+  | '>='
+  | '<='
+  | '<>'
+  | like
+  | is
+  | not
+
+OBJECT -> id
+
+LOGICALOPERATOR -> and
+  | or
+
+JOINTYPE -> inner
+  | left
+  | right
+  | full
+
+JOINCONDITION -> JOINTYPE join TABLE on CONDITION
+    | JOINTYPE join TABLE on CONDITION JOINCONDITION
