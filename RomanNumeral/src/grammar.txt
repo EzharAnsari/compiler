@@ -47,6 +47,7 @@ JOINTYPE -> inner
   | left
   | right
   | full
+  | null
 
 JOINCONDITION -> JOINTYPE join TABLE on CONDITION
     | JOINTYPE join TABLE on CONDITION JOINCONDITION
