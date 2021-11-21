@@ -1,0 +1,66 @@
+
+LINE -> from RELATIONS where COND select COLUMNLIST
+    | from RELATIONS select COLUMNLIST
+
+RELATIONS -> TABLE
+    | TABLE JOINCONDITION
+    | TABLE JOINCONDITION order by COLUMNLIST   // need improvment 
+
+TABLE -> id     // from Orders 
+
+COLUMNLIST -> IDENTIFIERS | * | OBJECTTYPECOLUMN
+
+OBJECTTYPECOLUMN -> TABLE '.' id    //  Orders.OrderId, Customers.CustomerName
+    | TABLE '.' id ',' OBJECTTYPECOLUMN
+    | TABLE '.' id ',' as id   //  tableName.id, tableName.title, tableName.last_name AS editor
+
+IDENTIFIERS -> id
+  | id ',' IDENTIFIERS
+
+CONDITION -> OBJECT OPRATOR CONSTANT
+  | OBJECT OPRATOR CONSTANT LOGICALOPERATOR CONDITION
+  | ( CONDITION LOGICALOPERATOR CONDITION )
+  | OBJECT in ARRAYOFCONSTANT
+
+CONSTANT -> string
+  | int
+  | float
+
+ARRAYOFCONSTANT -> CONSTANT
+  | CONSTANT ',' ARRAYOFCONSTANT
+
+OPRATOR -> '<'
+  | '='
+  | '>'
+  | '>='
+  | '<='
+  | '<>'
+  | like
+  | is
+  | not
+
+OBJECT -> id
+
+LOGICALOPERATOR -> and
+  | or
+
+JOINTYPE -> inner
+  | left
+  | right
+  | full
+  | null
+
+JOINCONDITION -> JOINTYPE join TABLE on CONDITION
+    | JOINTYPE join TABLE on CONDITION JOINCONDITION
+
+
+/** example ***/
+1. from Table1 T1 left join Table2 T2 on T1.column11 = T2.column21 select T1.column12, T1.column13, T2.column22, T2.column23
+output =>
+"SELECT T1.column12, T1.column13, T2.column22, T2.column23 FROM Table1 T1 LEFT JOIN Table2 T2 ON T1.column11 = T2.column21"
+
+
+2. from { Table1 T1 }
+  left join Table2 T2
+  on T1.column11 = T2.column21
+  select { T1.column12, T1.column13, T2.column22, T2.column23 as Table3 }

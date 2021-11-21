@@ -464,7 +464,7 @@ class Parser{
   }
 }
 
-let string = '1'
+let string = '1 + 2 * (1+2)'
 
 let p = new Parser(string);
 let ast = p.parse();

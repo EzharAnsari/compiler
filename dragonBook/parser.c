@@ -1,3 +1,15 @@
+/*
+* expr -> term + expr
+				| term - expr
+				| term
+	term -> factor * term
+				| factor / term
+	fector -> ( expr )
+					| NUM
+					| ID
+
+*/
+
 #include "global.h"
 
 int lookahead;

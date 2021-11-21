@@ -1,25 +1,4 @@
 // ***************** Grammar Rule ****************** //
-/**
- * QUERY -> from FROMENTITY where CONDITION select SELLIST
- * 
- * SELLIST -> ATTRIBUTE
- *           | ATTRIBUTE comma SELLIST
- * 
- * FROMENTITY -> RELATION
- * 
- * CONDITION -> ATTRIBUTE = CONSTANT
- *            | ATTRIBUTE < CONSTANT
- * 
- * CONSTANT -> STRING | INT | FLOAT
- * 
- * ATTRIBUTE -> ID  { return TokenID }
- * 
- * RELATION -> ID  { return TokenID }
- * 
- * FROMLIST -> ID  { return TokenID }
- * 
- */
-
  /**
   * LINE -> from FROMENTITY where COND select SELECTENTITY
   * 
@@ -490,6 +469,7 @@ class ConditionNode {
   }
 }
 
+// Customers.
 
 let str = "from Customers where Country='Germany' or Country='Mexico' and Country='Germany' select ContactName";
 let p = new Parser(str);

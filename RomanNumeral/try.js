@@ -1,84 +1,134 @@
 /**
- * S -> xTU | lX | X
- * T -> c | l
- * X -> xX | U
+ * S -> xTU | lX | X  { d[0] = 10 + d[2] + d[3] }
+ * T -> c | l { d[0] = 100}
+ * X -> x | xx | xxx | U
  * U -> iY | vI | I
  * Y -> x | v
  * I -> iI | epsilon
  */
 
- let rule = {
-  "S" : ["xTU", "lX", "X"],
-  "T" : ["c", "l"],
-  "X" : ["xX", "U"],
-  "U" : ["iY", "vI", "I"],
-  "Y" : ["x", "v"],
-  "I" : ["iI", "null"]
-}
-
-// let rule = {
-//   "A" : ["abC", "aBd", "aAD"],
-//   "B" : ["bB", "null"],
-//   "C" : ["d", "null"],
-//   "D" : ["b", "a", "null"]
-// }
+// iiii
 
 initPtr = 0;
-let stack = [];
 
-let romanNo = 'xlii';
+let romanNo = 'xlxl';
+let n = romanNo.length;
 
-function isMatched(a, b) {
-  if (romanNo[a] === b) {
+let value = 0;
+
+function match(b) {
+  if (romanNo[initPtr] === b) {
+    initPtr++;
+    // console.log(b, (initPtr -1))
     return true;
   }
-  else return false;
+  else { return false };
 }
 
-function parse(root, initPtr) {
-  let lhs = root
-  let rhs = rule[lhs];
-  stack.push(root);
-  
-  for (let i = 0; i< rhs.length; i++) {
-    let pro = rhs[i];
-    let ptr = 0;
-    console.log(pro);
-    console.log(initPtr);
-    for(let j=0; j<pro.length; j++) {
-      if (pro[j] === 'null') {
-        continue;
-      }
-
-      else if (!rule[pro[j]]) {   // for terminal 
-        if (isMatched(initPtr, pro[j])) {
-          ptr += 1;
-          initPtr += 1;
-          console.log(pro[j]);
-          continue;
-        }
-        else {
-          initPtr -= ptr;
-          // for removing production rule from stack
-          for( let k = 0; k < stack.length; i++){ 
-            if ( stack[i] === pro) { 
-                stack.splice(i, 1); 
-            }
-          }
-          break;
-        }
-      }
-      else {
-        console.log(pro[j]); 
-        stack.push(pro);
-        parse(pro[j], initPtr); 
-      }
-    }
-    
+function parseS() {
+  let temPtr = initPtr;
+  if (match('x') && parseT() && parseU()) {
+    value -= 10;
+    return true;
   }
+  initPtr = temPtr;
+  value = 0;
+  if (match('l') && parseX()) {
+    value += 50;
+    return true;
+  }
+  initPtr = temPtr;
+  value = 0;
+  if (parseX()) {
+    return true;
+  }
+  return false;
 }
 
-// console.log(initPtr);
+function parseT() {
+  let temPtr = initPtr;
+  let temValue = value;
+  if (match('l')) {
+    value += 50;
+    return true;
+  }
+  initPtr = temPtr;
+  value = temValue; 
+  if (match('c')) {
+    value += 100;
+    return true;
+  }
+  return false;
+}
 
-parse("S", initPtr);
-console.log(stack);
+function parseX() {
+  let temValue = value;
+  let temPtr = initPtr;
+  if (match('x') && parseX()) {
+    value += 10;
+    return true;
+  }
+  initPtr = temPtr;
+  value = temValue;
+  if (parseU()) {
+    return true;
+  }
+  return false;
+}
+
+function parseU() {
+  let temPtr = initPtr;
+  let temValue = value;
+  if (match('i') && parseY()) {
+    value -= 1;
+    return true;
+  }
+  initPtr = temPtr;
+  value = temValue;
+  if (match('v') && parseI()) {
+    value += 5;
+    return true;
+  }
+  initPtr = temPtr;
+  value = temValue;
+  if (parseI()) {
+    return true;
+  }
+  return false;
+}
+
+function parseY() {
+  let temPtr = initPtr;
+  let temValue = value;
+  if (match('x')) {
+    value += 10;
+    return true;
+  }
+  initPtr = temPtr;
+  value = temValue;
+  if (match('v')) {
+    value += 5;
+    return true;
+  }
+  return false;
+}
+
+function parseI() {
+  let temPtr = initPtr;
+  let temValue = value;
+  if (match('i') && parseI()) {
+    value += 1;
+    return true;
+  }
+  initPtr = temPtr;
+  value = temValue;
+  return true;
+}
+
+let result = parseS();
+if (initPtr === n) {
+  result = true;
+}
+else { value = 0; result = false; }
+console.log(result);
+console.log(value);
