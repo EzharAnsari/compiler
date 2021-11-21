@@ -3,8 +3,7 @@ LINE -> from RELATIONS where COND select COLUMNLIST
     | from RELATIONS select COLUMNLIST
 
 RELATIONS -> TABLE
-    | TABLE JOINCONDITION
-    | TABLE JOINCONDITION order by COLUMNLIST   // need improvment 
+    | TABLE JOINCONDITION 
 
 TABLE -> id     // from Orders 
 
@@ -48,7 +47,6 @@ JOINTYPE -> inner
   | left
   | right
   | full
-  | null
 
 JOINCONDITION -> JOINTYPE join TABLE on CONDITION
     | JOINTYPE join TABLE on CONDITION JOINCONDITION

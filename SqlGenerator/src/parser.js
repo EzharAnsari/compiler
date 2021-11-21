@@ -1,4 +1,4 @@
-const { Lexer, Position, Token } = require("./lexer");
+const { Lexer } = require("./lexer");
 const { QueryObject, ConditionNode } =require("./syntatx");
 
 
@@ -10,9 +10,6 @@ DOT = '.';
 INT = 'int';
 FLOAT = 'float';
 ID = 'id';
-FROM = 'from';
-WHERE = 'where';
-SELECT = 'select';
 AND = 'and';
 OR = 'or';
 EQUAL = '=';
@@ -22,6 +19,17 @@ EOF = 'EOF';
 STRING = 'string';
 LESSTHAN = '<';
 GREATTHAN = '>';
+
+// keyword
+FROM = 'from';
+WHERE = 'where';
+SELECT = 'select';
+INNER = 'inner';
+LEFT = 'left';
+RIGHT = 'right';
+FULL = 'full';
+JOIN = 'join';
+ON = 'on';
 
 // parser 
 class Parser {
@@ -64,93 +72,68 @@ class Parser {
     // return this.queryResult;
   }
 
+
+  // grammar rule
+  // from RELATIONS where COND select COLUMNLIST
+  // from RELATIONS select COLUMNLIST
   line() {
-    if (this.match(FROM) && this.fromEntity() && this.match(WHERE) && this.condition2() && this.match(SELECT) && this.selEntity()) {
-      return true;
+    if (this.match(FROM) && this.relations()) {
+      let temPostion =  this.lexer.pos.copy();
+      if (this.match(WHERE) && this.condition() && this.match(SELECT) && this.columnList()) {
+        return true;
+      }
+      this.lexer.pos = temPostion;
+      if (this.match(SELECT) && this.columnList()) {
+        return true
+      }
     }
-    else {
-      return false;
-    }
+    return false;
   }
 
-  // condition Method 
-  condition2() {
 
-    if (this.lookahead.type === ID) {
-      let object = this.lookahead;
-      this.match(this.lookahead.type);
-      let operator = this.lookahead;
-      if ( !this.operator()) {
-        return false;
+  // grammar rule
+  // TABLE
+  // TABLE JOINCONDITION
+  relations() {
+    if (this.table()) {
+      let temPostion =  this.lexer.pos.copy();
+      if (this.joinCondition()) {
+        return true;
       }
-      let value = this.lookahead;
-      if ( !this.constant()) {
-        return false;
-      }
-
-      let logOpToNextCondition = this.lookahead;
-      
-      if ( !this.conditionNext() ) {
-        logOpToNextCondition = null;
-      }
-      this.queryResult.conditionList.push(new ConditionNode(object, operator, value, logOpToNextCondition));
-
-      if (logOpToNextCondition != null) {
-        return this.condition2();
-      }
-      return true;
-    }
-    else {
-      console.log("expected ID")
-      return false;
-    }
-  }
-
-  conditionNext() {
-    if (this.match(AND) || this.match(OR)) {
+      this.lexer.pos = temPostion;
       return true;
     }
     return false;
   }
 
-  fromEntity() {
-    let tem = this.lookahead;
+  // grammar rule
+  // id
+  table() {
     if (this.match(ID)) {
-      this.queryResult.fromList.push(tem);
-      if (this.match(COMMA)) {
-        return this.fromEntity();
-      }
       return true;
     }
     return false;
   }
 
-  selEntity() {
-    let tem = this.lookahead;
-    if (this.match(ID)) {
-      this.queryResult.selectList.push(tem);
-      if (this.match(COMMA)) {
-        return this.selEntity();
-      }
+  // grammar rule
+  // JOINTYPE join TABLE on CONDITION
+  // JOINTYPE join TABLE on CONDITION JOINCONDITION
+  joinCondition() {
+    let temPostion = this.lexer.pos.copy();
+    if (this.joinType() && this.match(JOIN) && this.table() && this.match(ON) && this.condition()) {
+      this.joinCondition();
+      return true;
+    }
+    this.lexer.pos = temPostion;
+    return true;
+  }
+
+  joinType() {
+    if (this.match(INNER) || this.match(LEFT) || this.match(RIGHT) || this.match(FULL)) {
       return true;
     }
     return false;
   }
-
-  constant() {
-    if (this.match(STRING) || this.match(INT) || this.match(FLOAT)) {
-      return true;
-    }
-    return false;
-  }
-
-  operator() {
-    if (this.match(GREATTHAN) || this.match(LESSTHAN) || this.match(EQUAL)) {
-      return true;
-    }
-    return false;
-  }
-
 
 }
 
