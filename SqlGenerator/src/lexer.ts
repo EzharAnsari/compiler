@@ -1,29 +1,49 @@
-LEFTPAREN = '(';
-RIGHTPAREN = ')';
-COMMA = ',';
-SEMICOLON = ';';
-DOT = '.';
-INT = 'int';
-FLOAT = 'float';
-ID = 'id';
-FROM = 'from';
-WHERE = 'where';
-SELECT = 'select';
-AND = 'and';
-OR = 'or';
-EQUAL = '=';
-LIKE = 'like';
-IN = 'IN';
-EOF = 'EOF';
-STRING = 'string';
-LESSTHAN = '<';
-GREATTHAN = '>';
+ 
+export const LEFTPAREN = '(';
+export const RIGHTPAREN = ')';
+export const COMMA = ',';
+export const SEMICOLON = ';';
+export const DOT = '.';
+export const INT = 'int';
+export const FLOAT = 'float';
+export const ID = 'id';
+export const AND = 'and';
+export const OR = 'or';
+export const EQUAL = '=';
+export const LIKE = 'like';
+export const IN = 'IN';
+export const EOF = 'EOF';
+export const STRING = 'string';
+export const LESSTHAN = '<';
+export const GREATTHAN = '>';
 
+// keyword
+export const FROM = 'from';
+export const WHERE = 'where';
+export const SELECT = 'select';
+export const INNER = 'inner';
+export const LEFT = 'left';
+export const RIGHT = 'right';
+export const FULL = 'full';
+export const JOIN = 'join';
+export const ON = 'on';
+export const ERROR = 'error'
 
-const keywordList = ["where", "from", "select", "and", "or"];
+const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_$'.split('')
+const digits = '1234567890'.split('')
+export const keywords = [
+  "where", "from", "select", "and", "or", "inner", "left", "right", "full", "join", "on"
+]
 
-class Position {
-  constructor(idx, ln, col, fileName, ftxt) {
+export class Position {
+  // field
+  idx: number
+  ln: number
+  col: number
+  fileName: string
+  ftxt: string
+
+  constructor(idx: number, ln: number, col: number, fileName: string, ftxt: string) {
     this.idx = idx;
     this.ln = ln;
     this.col = col;
@@ -32,31 +52,39 @@ class Position {
   }
 
 
-  copy() {
+  copy(): Position {
     return new Position(this.idx, this.ln, this.col, this.fileName, this.ftxt);
   }
 }
 
 // ********************* Token ************************ //
 
-class Token {
-  constructor(type, value = null) {
+export class Token {
+  // field
+  type: string
+  value: string
+
+  constructor(type: string, value: string = '') {
     this.type = type;
     this.value = value;
   }
 }
 
 //  Lexer 
-class Lexer {
-  constructor(fileName, text) {
+export class Lexer {
+  fileName: string
+  text: string
+  pos: Position
+  currentChar: string = ''
+
+  constructor(fileName: string, text: string) {
     this.text = text;
     this.fileName = fileName;
     this.pos = new Position(-1, 0, -1, fileName, text);
-    this.currentChar = null;
     this.setCurrentChar();
   }
 
-  nextPos() {
+  nextPos(): void {
     this.pos.idx += 1;
     this.pos.col += 1;
 
@@ -66,23 +94,23 @@ class Lexer {
     }
   }
 
-  setCurrentChar() {
+  setCurrentChar(): void {
     this.nextPos();
     if (this.pos.idx < this.text.length) {
       this.currentChar = this.text[this.pos.idx];
     }
-    else this.currentChar = null;
+    else this.currentChar = '';
   }
 
-  isCharacterALetter(char) {
-    return (/[a-zA-Z]/).test(char)
+  isCharacterALetter(char: string): boolean {
+    return letters.includes(char)
   }
 
-  isCharacterADigit(char) {
-    return (/[0-9]/).test(char)
+  isCharacterADigit(char: string): boolean {
+    return digits.includes(char)
   }
 
-  makeNumber() {
+  makeNumber(): Token {
     let numStr = '';
     let dotCount = 0;
     while (this.currentChar != null && this.isCharacterADigit(this.currentChar) || this.currentChar === '.') {
@@ -99,14 +127,14 @@ class Lexer {
       this.setCurrentChar();
     }
     if (dotCount === 0) {
-      return new Token(INT, parseInt(numStr));
+      return new Token(INT, numStr);
     }
     else {
-      return  new Token(FLOAT, parseFloat(numStr));
+      return  new Token(FLOAT, numStr);
     }
   }
 
-  makeID() {
+  makeID(): Token {
     let str = '';
     while(this.currentChar != null) {
       if (this.isCharacterADigit(this.currentChar) || this.isCharacterALetter(this.currentChar)) {
@@ -117,13 +145,13 @@ class Lexer {
         break;
       }
     }
-    if (keywordList.includes(str)) {
+    if (keywords.includes(str)) {
       return new Token(str.toLowerCase());
     }
     return new Token(ID, str);
   }
 
-  makeString() {
+  makeString(): Token {
     let str = '';
     let singleQuote = 39;
     let doubleQuote = 34;
@@ -152,13 +180,13 @@ class Lexer {
     return new Token(STRING, str);
   }
 
-  getToken() {
+  getToken(): Token {
 
-    if (this.currentChar === null) {
+    if (this.currentChar === '') {
       return new Token(EOF);
     }
 
-    else if (this.currentChar != null) {
+    else {
       if (this.currentChar === ' ' || this.currentChar === '\t' || this.currentChar === '\n') {
         this.setCurrentChar();
         return this.getToken();
@@ -190,52 +218,19 @@ class Lexer {
       }
       else {
         console.log("Illegal token");
-        return null;
+        return new Token(ERROR);
       }
     }
   }
 
-  getListOfTokens() {
-    let tokens = [];
-
-    while (this.currentChar != null) {
-      if (this.currentChar === ' ' || this.currentChar === '\t' || this.currentChar === '\n') {
-        this.setCurrentChar();
-      }
-      else if (this.isCharacterADigit(this.currentChar)) {
-        tokens.push(this.makeNumber());
-      }
-      else if (this.isCharacterALetter(this.currentChar)) {
-        tokens.push(this.makeID());
-      }
-      else if(this.currentChar.charCodeAt(0) === 39 || this.currentChar.charCodeAt(0) === 34) {
-        tokens.push(this.makeString());
-      }
-      else if (this.currentChar === '=') {
-        this.setCurrentChar();
-        tokens.push(new Token(EQUAL));
-      }
-      else if (this.currentChar === ',') {
-        this.setCurrentChar();
-        tokens.push(new Token(COMMA));
-      }
-      else {
-        console.log("Illegal token");
-        return [];
-      }
-    }
-    tokens.push(new Token(EOF));
-    return tokens;
-  }
-
-  test() {
+  test(): void {
     let tem = this.getToken();
     // console.log(tem);
     while(tem != null && tem.type != EOF && this.currentChar != null) {
+      console.log(tem);
       tem = this.getToken();
-      // console.log(tem);
+      
     }
   }
 }
 
-module.exports = { keywordList, Position, Token, Lexer }

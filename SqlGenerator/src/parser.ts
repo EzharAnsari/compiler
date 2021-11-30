@@ -1,61 +1,26 @@
-const { Lexer } = require("./lexer");
-const { QueryObject, ConditionNode } =require("./syntatx");
+import { Lexer, Token, FROM, WHERE, SELECT, ID, JOIN, LEFT, RIGHT, FULL, ON, INNER, LEFTPAREN } from './lexer'
+import { IntermediateQuery, ConditionNode } from './intermediateQuery'
 
 
-LEFTPAREN = '(';
-RIGHTPAREN = ')';
-COMMA = ',';
-SEMICOLON = ';';
-DOT = '.';
-INT = 'int';
-FLOAT = 'float';
-ID = 'id';
-AND = 'and';
-OR = 'or';
-EQUAL = '=';
-LIKE = 'like';
-IN = 'IN';
-EOF = 'EOF';
-STRING = 'string';
-LESSTHAN = '<';
-GREATTHAN = '>';
+ // parser 
+export class Parser {
+  lexer: Lexer
+  lookahead: Token
+  queryResult: IntermediateQuery
 
-// keyword
-FROM = 'from';
-WHERE = 'where';
-SELECT = 'select';
-INNER = 'inner';
-LEFT = 'left';
-RIGHT = 'right';
-FULL = 'full';
-JOIN = 'join';
-ON = 'on';
-
-// parser 
-class Parser {
-  constructor(str) {
-    this.lexer = new Lexer('<stdio>', str);
-    // this.tokens = this.lexer.getListOfTokens();
-    this.lookahead = null;
-    // this.tokenIdx = -1;
-    this.queryResult = new QueryObject();
-    this.currentCondition = null;
+  constructor(str: string) {
+    this.lexer = new Lexer('<stdio>', str)
+    this.lookahead = this.getToken()
+    this.queryResult = new IntermediateQuery()
   }
 
-  setNextToken() {
-    this.tokenIdx += 1;
-    if (this.tokenIdx < this.tokens.length) {
-      this.lookahead = this.tokens[this.tokenIdx];
-    }
-  }
-
-  getToken() {
+  getToken(): Token {
     let tem = this.lexer.getToken();
     // console.log(tem);
     return tem;
   }
 
-  match(type){
+  match(type:string): boolean{
     if (this.lookahead.type === type) {
       this.lookahead = this.getToken();
       return true;
@@ -63,7 +28,7 @@ class Parser {
     return false;
   }
 
-  parse() {
+  parse(): boolean {
     this.lookahead = this.getToken();
     if (this.line()) {
       return true;
@@ -76,7 +41,7 @@ class Parser {
   // grammar rule
   // from RELATIONS where COND select COLUMNLIST
   // from RELATIONS select COLUMNLIST
-  line() {
+  line(): boolean {
     if (this.match(FROM) && this.relations()) {
       let temPostion =  this.lexer.pos.copy();
       if (this.match(WHERE) && this.condition() && this.match(SELECT) && this.columnList()) {
@@ -94,7 +59,7 @@ class Parser {
   // grammar rule
   // TABLE
   // TABLE JOINCONDITION
-  relations() {
+  relations(): boolean {
     if (this.table()) {
       let temPostion =  this.lexer.pos.copy();
       if (this.joinCondition()) {
@@ -108,7 +73,7 @@ class Parser {
 
   // grammar rule
   // id
-  table() {
+  table(): boolean {
     if (this.match(ID)) {
       return true;
     }
@@ -118,7 +83,7 @@ class Parser {
   // grammar rule
   // JOINTYPE join TABLE on CONDITION
   // JOINTYPE join TABLE on CONDITION JOINCONDITION
-  joinCondition() {
+  joinCondition(): boolean {
     let temPostion = this.lexer.pos.copy();
     if (this.joinType() && this.match(JOIN) && this.table() && this.match(ON) && this.condition()) {
       this.joinCondition();
@@ -128,13 +93,30 @@ class Parser {
     return true;
   }
 
-  joinType() {
+  joinType(): boolean {
     if (this.match(INNER) || this.match(LEFT) || this.match(RIGHT) || this.match(FULL)) {
       return true;
     }
     return false;
   }
 
-}
 
-module.exports = {Parser}
+  // grammar rule
+  // CONDITION -> OBJECT OPRATOR CONSTANT
+  // | OBJECT OPRATOR CONSTANT LOGICALOPERATOR CONDITION
+  // | ( CONDITION LOGICALOPERATOR CONDITION )
+  // | OBJECT in ARRAYOFCONSTANT
+  condition(): boolean {
+    if (this.match(LEFTPAREN)) {
+      
+    }
+    
+    return true
+  }
+
+  columnList(): boolean {
+    // Not defiend
+    return true
+  }
+
+}
