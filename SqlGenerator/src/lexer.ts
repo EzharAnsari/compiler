@@ -16,6 +16,9 @@ export const EOF = 'EOF';
 export const STRING = 'string';
 export const LESSTHAN = '<';
 export const GREATTHAN = '>';
+export const GREATTHANOREQUAL = '>=';
+export const LESSTHANOREQUAL = '<=';
+export const STAR = '*'
 
 // keyword
 export const FROM = 'from';
@@ -28,11 +31,14 @@ export const FULL = 'full';
 export const JOIN = 'join';
 export const ON = 'on';
 export const ERROR = 'error'
+export const IS = 'is'
+export const NOT = 'not'
+export const AS = 'as'
 
 const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_$'.split('')
 const digits = '1234567890'.split('')
 export const keywords = [
-  "where", "from", "select", "and", "or", "inner", "left", "right", "full", "join", "on"
+  "where", "from", "select", "and", "or", "inner", "left", "right", "full", "join", "on", "as", "not", "*", "like", "IN"
 ]
 
 export class Position {
@@ -216,7 +222,12 @@ export class Lexer {
         this.setCurrentChar();
         return new Token(GREATTHAN);
       }
+      else if (this.currentChar === '.') {
+        this.setCurrentChar();
+        return new Token(DOT);
+      }
       else {
+        console.log(this.currentChar)
         console.log("Illegal token");
         return new Token(ERROR);
       }
