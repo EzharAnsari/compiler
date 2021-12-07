@@ -1,23 +1,60 @@
-import { Lexer, Token, FROM, INT, AS, STAR, IS, NOT, WHERE, SELECT, ID, JOIN, LEFT, RIGHT, FULL, ON, INNER, LEFTPAREN, RIGHTPAREN, AND, OR, IN, LESSTHAN, EQUAL, GREATTHAN, LESSTHANOREQUAL, GREATTHANOREQUAL, LIKE, STRING, FLOAT, COMMA, DOT } from './lexer'
+import { Lexer, Position, Token, FROM, INT, AS, STAR, IS, NOT, WHERE, SELECT, ID, JOIN, LEFT, RIGHT, FULL, ON, INNER, LEFTPAREN, RIGHTPAREN, AND, OR, IN, LESSTHAN, EQUAL, GREATTHAN, LESSTHANOREQUAL, GREATTHANOREQUAL, LIKE, STRING, FLOAT, COMMA, DOT } from './lexer'
 import { IntermediateQuery, ConditionNode } from './intermediateQuery'
 
+type positionAndToken = {
+  pos: Position,
+  token: Token,
+  char: string
+}
 
  // parser 
 export class Parser {
   lexer: Lexer
   lookahead: Token
   queryResult: IntermediateQuery
+  count: number
 
   constructor(str: string) {
     this.lexer = new Lexer('<stdio>', str)
     this.lookahead = this.getToken()
     this.queryResult = new IntermediateQuery()
+    this.count = 1
   }
 
   getToken(): Token {
     let tem = this.lexer.getToken();
-    // console.log(tem);
     return tem;
+  }
+
+  getPosition(): Position {
+    return this.lexer.pos.copy()
+  }
+
+  getLexer(): Lexer {
+    return this.lexer
+  }
+
+  setLexer(value: Lexer) {
+    this.lexer = value
+  }
+
+  setPosition(value: Position): void {
+    this.lexer.pos = new Position(value.idx, value.ln, value.col, value.fileName, value.ftxt)
+  }
+
+  getPosAndToken(): positionAndToken {
+    let tem: positionAndToken = {
+      pos: this.getPosition(),
+      token: this.lookahead,
+      char: this.lexer.getCurrentChar()
+    }
+    return tem
+  }
+
+  setPosAndToken(value: positionAndToken): void {
+    this.lookahead = value.token
+    this.setPosition(value.pos)
+    this.lexer.currentChar = value.char
   }
 
   match(type:string): boolean{
@@ -42,12 +79,11 @@ export class Parser {
   // from RELATIONS select COLUMNLIST
   line(): boolean {
     if (this.match(FROM) && this.relations()) {
-      console.log(this.lookahead)
-      let temPostion =  this.lexer.pos.copy();
+      let tem: positionAndToken =  this.getPosAndToken()
       if (this.match(WHERE) && this.condition() && this.match(SELECT) && this.columnList()) {
         return true;
       }
-      this.lexer.pos = temPostion;
+      this.setPosAndToken(tem)
       if (this.match(SELECT) && this.columnList()) {
         return true
       }
@@ -61,11 +97,11 @@ export class Parser {
   // TABLE JOINCONDITION
   relations(): boolean {
     if (this.table()) {
-      let temPostion =  this.lexer.pos.copy();
+      let tem: positionAndToken =  this.getPosAndToken()
       if (this.joinCondition()) {
         return true;
       }
-      this.lexer.pos = temPostion;
+      this.setPosAndToken(tem)
       return true;
     }
     return false;
@@ -84,13 +120,15 @@ export class Parser {
   // JOINTYPE join TABLE on CONDITION
   // JOINTYPE join TABLE on CONDITION JOINCONDITION
   joinCondition(): boolean {
-    let temPostion = this.lexer.pos.copy();
+    let tem: positionAndToken =  this.getPosAndToken()
     if (this.joinType() && this.match(JOIN) && this.table() && this.match(ON) && this.condition()) {
-      this.joinCondition();
+      if (this.joinCondition()) {
+        return true
+      }
       return true;
     }
-    this.lexer.pos = temPostion;
-    return true;
+    this.setPosAndToken(tem)
+    return false;
   }
 
   joinType(): boolean {
@@ -112,11 +150,11 @@ export class Parser {
         return true;
       }
     }
-    else if(this.match(ID)) {
+    else if(this.object()) {
       if (this.match(IN) && this.arrayOfConstant()) {
         return true
       }
-      else if(this.operator() && this.constant()) {
+      else if(this.operator() && this.object()) {
         if(this.logicalOperator()) {
           if (this.condition()) {
             return true
@@ -128,6 +166,26 @@ export class Parser {
     }
     
     return false
+  }
+
+  // Grammar rule
+  //OBJECT -> TABLE
+  //  | TABLE '.' id
+  object():boolean {
+    let tem: positionAndToken =  this.getPosAndToken()
+    if(this.table() && this.match(DOT) && this.match(ID)) {
+      return true
+    }
+    this.setPosAndToken(tem)
+    if(this.table()) {
+      return true
+    }
+    this.setPosAndToken(tem)
+    if(this.constant()) {
+      return true
+    }
+    return false
+
   }
 
   // Grammar rule
@@ -179,15 +237,15 @@ export class Parser {
     if(this.match(STAR)) {
       return true
     }
-    let temPostion =  this.lexer.pos.copy();
+    let tem: positionAndToken =  this.getPosAndToken()
     if(this.objectTypeColumn()) {
       return true
     }
-    this.lexer.pos = temPostion;
+    this.setPosAndToken(tem)
     if(this.simpleList()) {
       return true
     }
-    this.lexer.pos = temPostion;
+    this.setPosAndToken(tem)
     return false
   }
 

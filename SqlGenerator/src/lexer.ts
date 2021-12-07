@@ -100,6 +100,10 @@ export class Lexer {
     }
   }
 
+  getCurrentChar(): string {
+    return this.currentChar
+  }
+
   setCurrentChar(): void {
     this.nextPos();
     if (this.pos.idx < this.text.length) {
@@ -170,6 +174,7 @@ export class Lexer {
     }
     this.setCurrentChar();
     while(this.currentChar != null) {
+      
       if (this.isCharacterADigit(this.currentChar) || this.isCharacterALetter(this.currentChar)) {
         str += this.currentChar;
         this.setCurrentChar();
