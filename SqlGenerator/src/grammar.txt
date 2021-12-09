@@ -66,3 +66,58 @@ output =>
   left join Table2 T2
   on T1.column11 = T2.column21
   select { T1.column12, T1.column13, T2.column22, T2.column23 as Table3 }
+
+
+
+from user
+  left join record 
+    on user.userid = record.userid 
+      select col1, col2
+
+result will be (IR)
+
+// Interemediate Representation
+IR {
+  type: queryExpression,
+  from: fromClause
+}
+
+fromClause {
+  type : 'fromClause',
+  identifier : { type: 'ID', value: 'user' }, // Token
+  then : JoinIntoClause 
+}
+
+JoinIntoClause {
+  type : 'JoinIntoClause'
+  identifier : { type: 'ID', value: 'record' }, // Token
+  left : MemberExpression,
+  right : MemberExpression,
+  then : SelectClause
+}
+
+// left 
+MemberExpression {
+  type: MemberExpression.
+  object : { type: 'ID', value: 'user' },
+  property : { type: 'ID', value: 'userid' },
+}
+
+// right
+MemberExpression {
+  type: MemberExpression.
+  object : { type: 'ID', value: 'record' },
+  property : { type: 'ID', value: 'userid' },
+}
+
+SelectClause {
+  type : SelectClause,
+  expression : ObjectExpression
+}
+
+ObjectExpression {
+  type : ObjectExpression,
+  properties : Array(2)
+    0: col1,
+    1: col2
+}
