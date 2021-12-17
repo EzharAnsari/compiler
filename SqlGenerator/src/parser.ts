@@ -1,5 +1,5 @@
 import { Lexer, Position, Token, FROM, INT, AS, STAR, IS, NOT, WHERE, SELECT, ID, JOIN, LEFT, RIGHT, FULL, ON, INNER, LEFTPAREN, RIGHTPAREN, AND, OR, IN, LESSTHAN, EQUAL, GREATTHAN, LESSTHANOREQUAL, GREATTHANOREQUAL, LIKE, STRING, FLOAT, COMMA, DOT } from './lexer'
-import { IntermediateQuery, ConditionNode, ArrayNode, ObjectNode, MemberNode, ConstantNode, BinaryOpNode } from './intermediateQuery'
+import { IntermediateQuery, ArrayNode, ObjectNode, MemberNode, ConstantNode, BinaryOpNode } from './intermediateQuery'
 
 type positionAndToken = {
   pos: Position,

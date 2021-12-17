@@ -53,36 +53,6 @@ export class IntermediateQuery {
 
 }
 
-export class ConditionNode {
-  object: string
-  operator: string
-  value: string
-  logOpToNextCondition: string
-
-  constructor() {
-    this.object = ''
-    this.operator = ''
-    this.value = ''
-    this.logOpToNextCondition = ''
-  }
-
-  setObject(value: string): void {
-    this.object = value
-  }
-
-  setOperator(value: string): void {
-    this.operator = value
-  }
-
-  setValue(value: string): void {
-    this.value = value
-  }
-
-  setLogOpToNextCondition(value: string): void {
-    this.logOpToNextCondition = value
-  }
-
-}
 
 export class ObjectNode {
   tok: Token
