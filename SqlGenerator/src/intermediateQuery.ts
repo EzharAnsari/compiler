@@ -1,4 +1,4 @@
-import { Token, INT, FLOAT, STRING } from "./lexer";
+import { Token, INT, EOF, FLOAT, STRING } from "./lexer";
 
 // ------------------------------------------------
 // Operators
@@ -85,81 +85,132 @@ export type QueryExpression = {
   from: FromClause
 }
 
+export class JoinClause {
+  joinType: string
+  joinTable: string
+  joinCondition: any
+
+  constructor() {
+    this.joinType = ''
+    this.joinTable = ''
+  }
+
+  setJoinType(value: string) : void {
+    this.joinType = value
+  }
+
+  setJoinTable(value: string) : void {
+    this.joinTable = value
+  }
+
+  setJoinCondition(value: any) : void {
+    this.joinCondition = value
+  }
+}
+
 export class IntermediateQuery {
   // field
-  selectList: Token[]
+  selectList: any[]
   fromList: Token[]
-  conditionList: ConditionNode[]
+  condition: any
+  joinClause: JoinClause
 
   constructor() {
     this.selectList = [];
     this.fromList = [];
-    this.conditionList = [];
+    this.joinClause = new JoinClause()
   }
 
-  queryGenerate() {
-    let i = 0;
-    let result = "SELECT ";
-
-    for(i=0; i<this.selectList.length; i++) {
-      result += this.selectList[i].value
-      if (this.selectList.length != (i+1))
-        result += ", ";
-      else
-        result += " " 
-    } 
-    
-    result += "FROM ";
-
-    for(i=0; i<this.fromList.length; i++) {
-      result += this.fromList[i].value
-      if (this.fromList.length != (i+1))
-        result += ", ";
-      else
-        result += " " 
-    }
-
-    result += "WHERE ";
-
-    for(i=0; i<this.conditionList.length; i++) {
-      let temConditionNode = this.conditionList[i];
-      result += temConditionNode.object.value;
-      result += temConditionNode.operator.type;
-      switch(temConditionNode.value.type) {
-        case INT:
-        case FLOAT:
-          result += temConditionNode.value.value;
-          break;
-        case STRING:
-          result += "'" + temConditionNode.value.value + "'";
-          break;
-        default:
-          console.log("Invalid constant type");
-      }
-      if (temConditionNode.logOpToNextCondition){
-        result += " " + temConditionNode.logOpToNextCondition.type;
-      }
-
-      if (this.conditionList.length != i+1) {
-        result += " ";
-      }
-    }
-    result += ";"
-    return result;
-
+  setCondition(value: any): void {
+    this.condition = value
   }
+
+  copy(): IntermediateQuery {
+    return this
+  }
+
+  reset(value: IntermediateQuery): void {
+    this.selectList = value.selectList
+    this.condition = value.condition
+    this.fromList = value.fromList
+    this.joinClause = value.joinClause
+  }
+
 }
 
 export class ConditionNode {
-  object: Token
-  operator: Token
-  value: Token
-  logOpToNextCondition: Token | null
+  object: string
+  operator: string
+  value: string
+  logOpToNextCondition: string
 
-  constructor(object: Token, operator: Token, value: Token, logOpToNextCondition: Token | null = null) {
-    this.object = object;
-    this.operator = operator;
-    this.value = value;
-    this.logOpToNextCondition = logOpToNextCondition;
+  constructor() {
+    this.object = ''
+    this.operator = ''
+    this.value = ''
+    this.logOpToNextCondition = ''
+  }
+
+  setObject(value: string): void {
+    this.object = value
+  }
+
+  setOperator(value: string): void {
+    this.operator = value
+  }
+
+  setValue(value: string): void {
+    this.value = value
+  }
+
+  setLogOpToNextCondition(value: string): void {
+    this.logOpToNextCondition = value
+  }
+
+}
+
+export class ObjectNode {
+  tok: Token
+
+  constructor(value: Token) {
+    this.tok = value
+  }
+}
+
+export class ConstantNode {
+  tok: Token
+
+  constructor(value: Token) {
+    this.tok = value
+  }
+}
+
+export class MemberNode {
+  value: Token
+  property: Token
+
+  constructor(value1: Token, Value2: Token) {
+    this.value = value1
+    this.property = Value2
+  }
+}
+
+export class ArrayNode {
+  array: Token[]
+
+  constructor(value1: Token[]) {
+    this.array = value1
+  }
+}
+
+export class BinaryOpNode {
+  left: any
+  right: any
+  op: any
+
+  constructor(left:any, op:any, right:any) {
+    this.left = left
+    this.op = op
+    this.right = right
   }
 }

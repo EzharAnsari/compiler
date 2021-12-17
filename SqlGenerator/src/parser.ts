@@ -1,10 +1,11 @@
 import { Lexer, Position, Token, FROM, INT, AS, STAR, IS, NOT, WHERE, SELECT, ID, JOIN, LEFT, RIGHT, FULL, ON, INNER, LEFTPAREN, RIGHTPAREN, AND, OR, IN, LESSTHAN, EQUAL, GREATTHAN, LESSTHANOREQUAL, GREATTHANOREQUAL, LIKE, STRING, FLOAT, COMMA, DOT } from './lexer'
-import { IntermediateQuery, ConditionNode } from './intermediateQuery'
+import { IntermediateQuery, ConditionNode, ArrayNode, ObjectNode, MemberNode, ConstantNode, BinaryOpNode } from './intermediateQuery'
 
 type positionAndToken = {
   pos: Position,
   token: Token,
-  char: string
+  char: string,
+  IQ: IntermediateQuery
 }
 
  // parser 
@@ -12,13 +13,11 @@ export class Parser {
   lexer: Lexer
   lookahead: Token
   queryResult: IntermediateQuery
-  count: number
 
   constructor(str: string) {
     this.lexer = new Lexer('<stdio>', str)
     this.lookahead = this.getToken()
     this.queryResult = new IntermediateQuery()
-    this.count = 1
   }
 
   getToken(): Token {
@@ -30,14 +29,6 @@ export class Parser {
     return this.lexer.pos.copy()
   }
 
-  getLexer(): Lexer {
-    return this.lexer
-  }
-
-  setLexer(value: Lexer) {
-    this.lexer = value
-  }
-
   setPosition(value: Position): void {
     this.lexer.pos = new Position(value.idx, value.ln, value.col, value.fileName, value.ftxt)
   }
@@ -46,7 +37,8 @@ export class Parser {
     let tem: positionAndToken = {
       pos: this.getPosition(),
       token: this.lookahead,
-      char: this.lexer.getCurrentChar()
+      char: this.lexer.getCurrentChar(),
+      IQ: this.queryResult.copy()
     }
     return tem
   }
@@ -55,6 +47,7 @@ export class Parser {
     this.lookahead = value.token
     this.setPosition(value.pos)
     this.lexer.currentChar = value.char
+    this.queryResult.reset(value.IQ)
   }
 
   match(type:string): boolean{
@@ -80,8 +73,15 @@ export class Parser {
   line(): boolean {
     if (this.match(FROM) && this.relations()) {
       let tem: positionAndToken =  this.getPosAndToken()
-      if (this.match(WHERE) && this.condition() && this.match(SELECT) && this.columnList()) {
-        return true;
+      if (this.match(WHERE)) {
+        let result = this.condition()
+        if (result) {
+          this.queryResult.setCondition(result)
+          
+          if (this.match(SELECT) && this.columnList()) {
+            return true;
+          }
+        }
       }
       this.setPosAndToken(tem)
       if (this.match(SELECT) && this.columnList()) {
@@ -96,7 +96,9 @@ export class Parser {
   // TABLE
   // TABLE JOINCONDITION
   relations(): boolean {
+    let temToken = this.lookahead
     if (this.table()) {
+      this.queryResult.fromList.push(temToken)
       let tem: positionAndToken =  this.getPosAndToken()
       if (this.joinCondition()) {
         return true;
@@ -108,7 +110,7 @@ export class Parser {
   }
 
   // grammar rule
-  // id
+  // TABLE -> id
   table(): boolean {
     if (this.match(ID)) {
       return true;
@@ -121,18 +123,25 @@ export class Parser {
   // JOINTYPE join TABLE on CONDITION JOINCONDITION
   joinCondition(): boolean {
     let tem: positionAndToken =  this.getPosAndToken()
-    if (this.joinType() && this.match(JOIN) && this.table() && this.match(ON) && this.condition()) {
-      if (this.joinCondition()) {
-        return true
+    if (this.joinType() && this.match(JOIN) ) {
+      let joinTable = this.lookahead.type
+      if(this.table() && this.match(ON)) {
+        this.queryResult.joinClause.setJoinTable(joinTable)
+        let result = this.condition()
+        if (result) {
+          this.queryResult.joinClause.setJoinCondition(result)
+          return true
+        }
       }
-      return true;
     }
     this.setPosAndToken(tem)
-    return false;
+    return true;
   }
 
   joinType(): boolean {
+    let type = this.lookahead.type
     if (this.match(INNER) || this.match(LEFT) || this.match(RIGHT) || this.match(FULL)) {
+      this.queryResult.joinClause.setJoinType(type)
       return true;
     }
     return false;
@@ -144,33 +153,85 @@ export class Parser {
   // | OBJECT OPRATOR CONSTANT LOGICALOPERATOR CONDITION
   // | ( CONDITION LOGICALOPERATOR CONDITION )
   // | OBJECT in ARRAYOFCONSTANT
-  condition(): boolean {
-    if (this.match(LEFTPAREN)) {
-      if (this.condition() && this.logicalOperator() && this.condition() && this.match(RIGHTPAREN)) {
-        return true;
-      }
-    }
-    else if(this.object()) {
-      if (this.match(IN) && this.arrayOfConstant()) {
-        return true
-      }
-      else if(this.operator() && this.object()) {
-        if(this.logicalOperator()) {
-          if (this.condition()) {
-            return true
-          }
-          return false
+
+  constant1(): any {
+    let tok = this.lookahead
+
+    switch(tok.type) {
+      case LEFTPAREN:
+        this.match(LEFTPAREN); let result = this.condition(); this.match(RIGHTPAREN); return result;
+      case ID:
+      {
+        this.match(ID)
+        if (this.match(DOT)) {
+          let tok2 = this.lookahead
+          this.match(ID)
+          return new MemberNode(tok, tok2)
         }
-        return true
+        return new ObjectNode(tok)
       }
+      case INT:
+        this.match(INT); return new ConstantNode(tok)
+      case FLOAT:
+        this.match(FLOAT); return new ConstantNode(tok)
+      case STRING:
+        this.match(STRING); return new ConstantNode(tok)
+      default:
+        console.log("Syntax Error"); return false;
     }
-    
-    return false
+  }
+
+  condition(): any {
+    let left = this.orOperation()
+    let opTok = this.lookahead
+    if(this.match(AND)) {
+      let right = this.condition()
+
+      left = new BinaryOpNode(left, opTok, right)
+    }
+    return left
+  }
+
+  orOperation(): any {
+    let left = this.simpleOperation()
+    let opTok = this.lookahead
+    if(this.match(OR)) {
+      let right = this.orOperation()
+
+      left = new BinaryOpNode(left, opTok, right)
+    }
+    return left
+  }
+
+  simpleOperation(): any {
+    let left = this.constant1()
+    let opTok = this.lookahead
+    if(this.operator()) {
+      let right = this.simpleOperation()
+
+      left = new BinaryOpNode(left, opTok, right)
+    }
+
+    else if (this.lookahead.type === IN) {
+      this.match(this.lookahead.type)
+      console.log(this.lookahead)
+      let temRight: Array<Token> = [this.lookahead]
+      this.match(this.lookahead.type)
+      while(this.match(COMMA)) {
+        temRight.push(this.lookahead)
+        this.match(this.lookahead.type)
+      }
+      let right = new ArrayNode(temRight)
+
+      left = new BinaryOpNode(left, opTok, right)
+    }
+    return left
   }
 
   // Grammar rule
   //OBJECT -> TABLE
   //  | TABLE '.' id
+  //  | CONSTANT
   object():boolean {
     let tem: positionAndToken =  this.getPosAndToken()
     if(this.table() && this.match(DOT) && this.match(ID)) {
@@ -237,15 +298,14 @@ export class Parser {
     if(this.match(STAR)) {
       return true
     }
-    let tem: positionAndToken =  this.getPosAndToken()
-    if(this.objectTypeColumn()) {
+    let result = this.constant1()
+    if (result) {
+      this.queryResult.selectList.push(result)
+      while(this.match(COMMA)) {
+        this.columnList()
+      }
       return true
     }
-    this.setPosAndToken(tem)
-    if(this.simpleList()) {
-      return true
-    }
-    this.setPosAndToken(tem)
     return false
   }
 

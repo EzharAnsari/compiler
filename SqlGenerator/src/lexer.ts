@@ -11,7 +11,7 @@ export const AND = 'and';
 export const OR = 'or';
 export const EQUAL = '=';
 export const LIKE = 'like';
-export const IN = 'IN';
+export const IN = 'in';
 export const EOF = 'EOF';
 export const STRING = 'string';
 export const LESSTHAN = '<';
@@ -38,7 +38,7 @@ export const AS = 'as'
 const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_$'.split('')
 const digits = '1234567890'.split('')
 export const keywords = [
-  "where", "from", "select", "and", "or", "inner", "left", "right", "full", "join", "on", "as", "not", "*", "like", "IN"
+  "where", "from", "select", "and", "or", "inner", "left", "right", "full", "join", "on", "as", "not", "*", "like", "in"
 ]
 
 export class Position {
@@ -215,6 +215,14 @@ export class Lexer {
         this.setCurrentChar();
         return new Token(EQUAL);
       }
+      else if (this.currentChar === '(') {
+        this.setCurrentChar();
+        return new Token(LEFTPAREN);
+      }
+      else if (this.currentChar === ')') {
+        this.setCurrentChar();
+        return new Token(RIGHTPAREN);
+      }
       else if (this.currentChar === ',') {
         this.setCurrentChar();
         return new Token(COMMA);
@@ -232,8 +240,7 @@ export class Lexer {
         return new Token(DOT);
       }
       else {
-        console.log(this.currentChar)
-        console.log("Illegal token");
+        console.log("Illegal token " + this.currentChar);
         return new Token(ERROR);
       }
     }

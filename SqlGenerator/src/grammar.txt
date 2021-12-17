@@ -3,7 +3,7 @@ LINE -> from RELATIONS where COND select COLUMNLIST
     | from RELATIONS select COLUMNLIST
 
 RELATIONS -> TABLE
-    | TABLE JOINCONDITION 
+    | TABLE JOINCLOUSE
 
 TABLE -> id     // from Orders 
 
@@ -120,4 +120,8 @@ ObjectExpression {
   properties : Array(2)
     0: col1,
     1: col2
+}
+
+whereClause {
+  type: 
 }
