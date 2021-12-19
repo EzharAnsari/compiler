@@ -4,14 +4,20 @@ export class JoinClause {
   joinType: string
   joinTable: string
   joinCondition: any
+  isUsed: boolean
 
   constructor() {
     this.joinType = ''
     this.joinTable = ''
+    this.isUsed = false
   }
 
   setJoinType(value: string) : void {
     this.joinType = value
+  }
+
+  setIsUsed(value: boolean): void {
+    this.isUsed = value
   }
 
   setJoinTable(value: string) : void {
@@ -27,17 +33,20 @@ export class IntermediateQuery {
   // field
   selectList: any[]
   fromList: Token[]
-  condition: any
+  whereClause: WhereClause
   joinClause: JoinClause
 
   constructor() {
     this.selectList = [];
     this.fromList = [];
     this.joinClause = new JoinClause()
+    this.whereClause = new WhereClause()
   }
 
   setCondition(value: any): void {
-    this.condition = value
+    this.whereClause.setCondition(value)
+    this.whereClause.setIsUsed(true)
+    console.log("Done")
   }
 
   copy(): IntermediateQuery {
@@ -46,13 +55,29 @@ export class IntermediateQuery {
 
   reset(value: IntermediateQuery): void {
     this.selectList = value.selectList
-    this.condition = value.condition
+    this.whereClause = value.whereClause
     this.fromList = value.fromList
     this.joinClause = value.joinClause
   }
 
 }
 
+export class WhereClause {
+  isUsed: boolean
+  condition: any
+
+  constructor() {
+    this.isUsed = false
+  }
+
+  setIsUsed(value: boolean): void {
+    this.isUsed = value
+  }
+
+  setCondition(value: any): void {
+    this.condition = value
+  }
+}
 
 export class ObjectNode {
   tok: Token

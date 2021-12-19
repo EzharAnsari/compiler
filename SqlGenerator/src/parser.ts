@@ -130,6 +130,7 @@ export class Parser {
         let result = this.condition()
         if (result) {
           this.queryResult.joinClause.setJoinCondition(result)
+          this.queryResult.joinClause.setIsUsed(true)
           return true
         }
       }
