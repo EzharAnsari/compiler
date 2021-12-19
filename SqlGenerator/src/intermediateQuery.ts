@@ -46,7 +46,6 @@ export class IntermediateQuery {
   setCondition(value: any): void {
     this.whereClause.setCondition(value)
     this.whereClause.setIsUsed(true)
-    console.log("Done")
   }
 
   copy(): IntermediateQuery {

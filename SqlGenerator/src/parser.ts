@@ -124,7 +124,7 @@ export class Parser {
   joinCondition(): boolean {
     let tem: positionAndToken =  this.getPosAndToken()
     if (this.joinType() && this.match(JOIN) ) {
-      let joinTable = this.lookahead.type
+      let joinTable = this.lookahead.value
       if(this.table() && this.match(ON)) {
         this.queryResult.joinClause.setJoinTable(joinTable)
         let result = this.condition()

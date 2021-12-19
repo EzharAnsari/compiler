@@ -1,8 +1,25 @@
-import { IntermediateQuery, WhereClause, JoinClause, ObjectNode, ArrayNode, MemberNode, BinaryOpNode } from './intermediateQuery'
+import { IntermediateQuery, WhereClause, JoinClause, ObjectNode, ArrayNode, MemberNode, BinaryOpNode, ConstantNode } from './intermediateQuery'
+import { Token } from './lexer'
+
+function arrayToString(value: Token[]): string {
+  let result = '( ', i
+
+  for(i=0; i<value.length; i++) {
+    result += value[i].value
+    if (value.length != (i+1))
+      result += ", ";
+    else
+      result += " " 
+  }
+
+  result += ')'
+  return result
+}
 
 export function binaryOpNodeToString(value: BinaryOpNode): string {
   let result = ''
 
+  // for left operand
   if (value.left instanceof BinaryOpNode) {
     result += '( '
     result += binaryOpNodeToString(value.left)
@@ -11,14 +28,43 @@ export function binaryOpNodeToString(value: BinaryOpNode): string {
   else if(value.left instanceof ObjectNode) {
     result += value.left.tok.value
   }
-
+  else if(value.left instanceof ConstantNode) {
+    result += value.left.tok.value
+  }
   else if (value.left instanceof MemberNode) {
     result += value.left.value.value
       result += '.'
       result += value.left.property.value
   }
 
-  else if
+  else if (value.left instanceof ArrayNode) {
+    result += arrayToString(value.left.array)
+  }
+
+  // for operator
+  result += ` ${value.op.type} `
+
+  // for right operand
+  if (value.right instanceof BinaryOpNode) {
+    result += '( '
+    result += binaryOpNodeToString(value.right)
+    result += ' )'
+  }
+  else if(value.right instanceof ObjectNode) {
+    result += value.right.tok.value
+  }
+  else if(value.right instanceof ConstantNode) {
+    result += value.right.tok.value
+  }
+  else if (value.right instanceof MemberNode) {
+    result += value.right.value.value
+      result += '.'
+      result += value.right.property.value
+  }
+
+  else if (value.right instanceof ArrayNode) {
+    result += arrayToString(value.right.array)
+  }
 
   return result
 }
@@ -65,7 +111,8 @@ export function binaryOpNodeToString(value: BinaryOpNode): string {
   }
 
   if(IQ.whereClause.isUsed) {
-
+    result += " where "
+    result += binaryOpNodeToString(IQ.whereClause.condition)
   }
 
   return result
