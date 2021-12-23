@@ -118,7 +118,7 @@ export class SqlConverter {
     }
   
     if(this.IQ.whereClause.isUsed) {
-      result += " where "
+      result += "where "
       result += this.binaryOpNodeToString(this.IQ.whereClause.condition)
     }
   

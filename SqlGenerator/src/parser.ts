@@ -215,7 +215,6 @@ export class Parser {
 
     else if (this.lookahead.type === IN) {
       this.match(this.lookahead.type)
-      console.log(this.lookahead)
       let temRight: Array<Token> = [this.lookahead]
       this.match(this.lookahead.type)
       while(this.match(COMMA)) {
@@ -308,42 +307,5 @@ export class Parser {
       return true
     }
     return false
-  }
-
-  //Grammar rule
-  //OBJECTTYPECOLUMN -> TABLE '.' id
-  //  | TABLE '.' id ',' OBJECTTYPECOLUMN
-  //  | TABLE '.' id ',' as id
-  objectTypeColumn(): boolean {
-    if(this.table() && this.match(DOT) && this.match(ID)) {
-      if(this.match(COMMA)) {
-        if (this.match(AS) && this.match(ID)) {
-          return true
-        }
-        else if(this.objectTypeColumn()) {
-          return true
-        }
-        return false
-      }
-      return true
-    }
-    return false
-  }
-
-  //Grammar rule
-  //SIMPLELIST -> TABLE
-  //  | TABLE ',' SIMPLELIST
-  simpleList(): boolean {
-    if(this.table()) {
-      if(this.match(COMMA)) {
-        if(this.simpleList()) {
-          return true
-        }
-        return false
-      }
-      return true
-    }
-    return false
-
   }
 }
