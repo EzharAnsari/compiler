@@ -1,3 +1,5 @@
+LINES -> LINE newLine LINES
+    | LINE
 
 LINE -> from RELATIONS where COND select COLUMNLIST
     | from RELATIONS select COLUMNLIST

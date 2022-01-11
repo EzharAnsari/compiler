@@ -2,10 +2,12 @@ import { IntermediateQuery, WhereClause, JoinClause, ObjectNode, ArrayNode, Memb
 import { Token } from './lexer'
 
 export class SqlConverter {
+  IQs: IntermediateQuery[]
   IQ: IntermediateQuery
 
-  constructor(value: IntermediateQuery) {
-    this.IQ = value
+  constructor(value: IntermediateQuery[]) {
+    this.IQs = value
+    this.IQ = new IntermediateQuery()
   }
 
   arrayToString(value: Token[]): string {
@@ -73,6 +75,21 @@ export class SqlConverter {
       result += this.arrayToString(value.right.array)
     }
   
+    return result
+  }
+
+  result(): string {
+    let result = ''
+    let i = 0;
+    let len = this.IQs.length
+    for (i=0; i<len; i++) {
+      this.IQ = this.IQs[i]
+      let tem: string = this.convert()
+      result += tem
+      if (i != (len - 1))
+        result += '\n'
+    }
+
     return result
   }
 

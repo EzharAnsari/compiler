@@ -13,11 +13,13 @@ export class Parser {
   lexer: Lexer
   lookahead: Token
   queryResult: IntermediateQuery
+  queryResults: IntermediateQuery[]
 
   constructor(str: string) {
     this.lexer = new Lexer('<stdio>', str)
     this.lookahead = this.getToken()
     this.queryResult = new IntermediateQuery()
+    this.queryResults = []
   }
 
   getToken(): Token {
@@ -59,13 +61,30 @@ export class Parser {
   }
 
   parse(): boolean {
-    if (this.line()) {
+    if (this.lines()) {
       return true;
     }
     return false;
     // return this.queryResult;
   }
 
+  // Grammer rule
+  // LINE newLine LINES
+  // LINE
+  lines(): boolean {
+    if (this.line()) {
+      this.queryResults.push(this.queryResult)
+      this.queryResult = new IntermediateQuery()
+      // console.log(this.lookahead)
+      if (this.lookahead.type === FROM) {
+        console.log(this.lookahead)
+        console.log(this.queryResults)
+        return this.lines()
+      }
+      return true
+    }
+    return false
+  }
 
   // grammar rule
   // from RELATIONS where COND select COLUMNLIST
@@ -213,17 +232,18 @@ export class Parser {
       left = new BinaryOpNode(left, opTok, right)
     }
 
-    else if (this.lookahead.type === IN) {
-      this.match(this.lookahead.type)
+    else if (this.match(IN) && this.match(LEFTPAREN)) {
       let temRight: Array<Token> = [this.lookahead]
       this.match(this.lookahead.type)
       while(this.match(COMMA)) {
         temRight.push(this.lookahead)
         this.match(this.lookahead.type)
       }
-      let right = new ArrayNode(temRight)
+      if(this.match(RIGHTPAREN)) {
+        let right = new ArrayNode(temRight)
 
-      left = new BinaryOpNode(left, opTok, right)
+        left = new BinaryOpNode(left, opTok, right)
+      }
     }
     return left
   }
