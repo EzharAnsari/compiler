@@ -63,16 +63,27 @@ export class Position {
   }
 }
 
+export class startPosition {
+  ln: number
+  cn: number
+
+  constructor(ln: number, cl:number) {
+    this.cn = cl
+    this.ln = ln
+  }
+}
 // ********************* Token ************************ //
 
 export class Token {
   // field
   type: string
   value: string
+  startPos: startPosition
 
-  constructor(type: string, value: string = '') {
+  constructor(type: string, pos: startPosition, value: string = '') {
     this.type = type;
     this.value = value;
+    this.startPos = pos
   }
 }
 
@@ -120,7 +131,7 @@ export class Lexer {
     return digits.includes(char)
   }
 
-  makeNumber(): Token {
+  makeNumber(pos: startPosition): Token {
     let numStr = '';
     let dotCount = 0;
     while (this.currentChar != null && this.isCharacterADigit(this.currentChar) || this.currentChar === '.') {
@@ -137,14 +148,14 @@ export class Lexer {
       this.setCurrentChar();
     }
     if (dotCount === 0) {
-      return new Token(INT, numStr);
+      return new Token(INT, pos, numStr);
     }
     else {
-      return  new Token(FLOAT, numStr);
+      return  new Token(FLOAT, pos, numStr);
     }
   }
 
-  makeID(): Token {
+  makeID(pos: startPosition): Token {
     let str = '';
     while(this.currentChar != null) {
       if (this.isCharacterADigit(this.currentChar) || this.isCharacterALetter(this.currentChar)) {
@@ -156,12 +167,12 @@ export class Lexer {
       }
     }
     if (keywords.includes(str)) {
-      return new Token(str.toLowerCase());
+      return new Token(str.toLowerCase(), pos);
     }
-    return new Token(ID, str);
+    return new Token(ID, pos, str);
   }
 
-  makeString(): Token {
+  makeString(pos: startPosition): Token {
     let str = '';
     let singleQuote = 39;
     let doubleQuote = 34;
@@ -188,13 +199,13 @@ export class Lexer {
         break;
       }
     }
-    return new Token(STRING, str);
+    return new Token(STRING, pos, str);
   }
 
   getToken(): Token {
 
     if (this.currentChar === '') {
-      return new Token(EOF);
+      return new Token(EOF, new startPosition(this.pos.ln, this.pos.col));
     }
 
     else {
@@ -203,45 +214,49 @@ export class Lexer {
         return this.getToken();
       }
       else if (this.isCharacterADigit(this.currentChar)) {
-        return this.makeNumber();
+        return this.makeNumber(new startPosition(this.pos.ln, this.pos.col));
       }
       else if (this.isCharacterALetter(this.currentChar)) {
-        return this.makeID();
+        return this.makeID(new startPosition(this.pos.ln, this.pos.col));
       }
       else if(this.currentChar.charCodeAt(0) === 39 || this.currentChar.charCodeAt(0) === 34) {
-        return this.makeString();
+        return this.makeString(new startPosition(this.pos.ln, this.pos.col));
       }
       else if (this.currentChar === '=') {
         this.setCurrentChar();
-        return new Token(EQUAL);
+        return new Token(EQUAL, new startPosition(this.pos.ln, this.pos.col));
       }
       else if (this.currentChar === '(') {
         this.setCurrentChar();
-        return new Token(LEFTPAREN);
+        return new Token(LEFTPAREN, new startPosition(this.pos.ln, this.pos.col));
       }
       else if (this.currentChar === ')') {
         this.setCurrentChar();
-        return new Token(RIGHTPAREN);
+        return new Token(RIGHTPAREN, new startPosition(this.pos.ln, this.pos.col));
       }
       else if (this.currentChar === ',') {
         this.setCurrentChar();
-        return new Token(COMMA);
+        return new Token(COMMA, new startPosition(this.pos.ln, this.pos.col));
       }
       else if (this.currentChar === '<') {
         this.setCurrentChar();
-        return new Token(LESSTHAN);
+        return new Token(LESSTHAN, new startPosition(this.pos.ln, this.pos.col));
       }
       else if (this.currentChar === '>') {
         this.setCurrentChar();
-        return new Token(GREATTHAN);
+        return new Token(GREATTHAN, new startPosition(this.pos.ln, this.pos.col));
       }
       else if (this.currentChar === '.') {
         this.setCurrentChar();
-        return new Token(DOT);
+        return new Token(DOT, new startPosition(this.pos.ln, this.pos.col));
+      }
+      else if (this.currentChar === ';') {
+        this.setCurrentChar();
+        return new Token(SEMICOLON, new startPosition(this.pos.ln, this.pos.col));
       }
       else {
         console.log("Illegal token " + this.currentChar);
-        return new Token(ERROR);
+        return new Token(ERROR, new startPosition(this.pos.ln, this.pos.col));
       }
     }
   }

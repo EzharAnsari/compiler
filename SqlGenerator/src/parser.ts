@@ -1,4 +1,4 @@
-import { Lexer, Position, Token, FROM, INT, AS, STAR, IS, NOT, WHERE, SELECT, ID, JOIN, LEFT, RIGHT, FULL, ON, INNER, LEFTPAREN, RIGHTPAREN, AND, OR, IN, LESSTHAN, EQUAL, GREATTHAN, LESSTHANOREQUAL, GREATTHANOREQUAL, LIKE, STRING, FLOAT, COMMA, DOT } from './lexer'
+import { Lexer, Position, Token, EOF, FROM, INT, AS, STAR, IS, NOT, WHERE, SELECT, ID, JOIN, LEFT, RIGHT, FULL, ON, INNER, LEFTPAREN, RIGHTPAREN, AND, OR, IN, LESSTHAN, EQUAL, GREATTHAN, LESSTHANOREQUAL, GREATTHANOREQUAL, LIKE, STRING, FLOAT, COMMA, DOT, SEMICOLON, startPosition } from './lexer'
 import { IntermediateQuery, ArrayNode, ObjectNode, MemberNode, ConstantNode, BinaryOpNode } from './intermediateQuery'
 
 type positionAndToken = {
@@ -8,18 +8,39 @@ type positionAndToken = {
   IQ: IntermediateQuery
 }
 
+// Error
+export class errorInfo {
+  msg: string
+  pos: startPosition
+
+  constructor(msg: string, pos: startPosition) {
+    this.msg = msg
+    this.pos = pos
+  }
+}
+
+export class parsingError {
+  errorInfos: errorInfo[]
+
+  constructor() {
+    this.errorInfos = []
+  }
+}
+
  // parser 
 export class Parser {
   lexer: Lexer
   lookahead: Token
   queryResult: IntermediateQuery
   queryResults: IntermediateQuery[]
+  error: parsingError
 
   constructor(str: string) {
     this.lexer = new Lexer('<stdio>', str)
     this.lookahead = this.getToken()
     this.queryResult = new IntermediateQuery()
     this.queryResults = []
+    this.error = new parsingError()
   }
 
   getToken(): Token {
@@ -69,43 +90,79 @@ export class Parser {
   }
 
   // Grammer rule
-  // LINE newLine LINES
-  // LINE
+  // LINE semicolon LINES
+  // LINE semicolon
   lines(): boolean {
     if (this.line()) {
       this.queryResults.push(this.queryResult)
       this.queryResult = new IntermediateQuery()
-      // console.log(this.lookahead)
-      if (this.lookahead.type === FROM) {
-        console.log(this.lookahead)
-        console.log(this.queryResults)
-        return this.lines()
+      
+      if (this.match(SEMICOLON)) {
+        // 
+        if (this.match(EOF)) return true
+        else return this.lines();
       }
-      return true
+      else {
+        let temError = new errorInfo('Expecting semicolon', this.lookahead.startPos)
+        this.error.errorInfos.push(temError)
+        if (this.match(EOF)) return false
+        else return this.lines()
+      }
     }
-    return false
+    else {
+      this.skipTokenUntilDelimeter([EOF, SEMICOLON])
+      // 
+      if(this.match(SEMICOLON)) {this.lines(); return false }
+      else if (this.match(EOF)) return false
+      else return false
+    }
+    
   }
 
   // grammar rule
   // from RELATIONS where COND select COLUMNLIST
   // from RELATIONS select COLUMNLIST
   line(): boolean {
-    if (this.match(FROM) && this.relations()) {
-      let tem: positionAndToken =  this.getPosAndToken()
-      if (this.match(WHERE)) {
-        let result = this.condition()
-        if (result) {
-          this.queryResult.setCondition(result)
-          
-          if (this.match(SELECT) && this.columnList()) {
-            return true;
+    if (this.match(FROM)) {
+      if( this.relations()) {
+        let tem: positionAndToken =  this.getPosAndToken()
+        if (this.match(WHERE)) {
+          let result = this.condition()
+          if (result) {
+            this.queryResult.setCondition(result)
+            
+            if (this.match(SELECT)) {
+              if(this.columnList()) {
+                return true;
+              }
+              else {return false}
+            }
+            else {
+              this.error.errorInfos.push(new errorInfo("Expecting 'select' Keyword", this.lookahead.startPos))
+              return false
+            }
+          }
+          else {
+            return false
           }
         }
+        this.setPosAndToken(tem)
+        if (this.match(SELECT)) {
+          if(this.columnList()) {
+            return true;
+          }
+          else {return false}
+        }
+        else {
+          this.error.errorInfos.push(new errorInfo("Expecting 'where or select or join type' Keyword", this.lookahead.startPos))
+          return false
+        }
       }
-      this.setPosAndToken(tem)
-      if (this.match(SELECT) && this.columnList()) {
-        return true
-      }
+      else { return false }
+    }
+    else {
+      if (this.match(EOF)) return false
+      this.error.errorInfos.push(new errorInfo("Expecting 'from' Keyword", this.lookahead.startPos))
     }
     return false;
   }
@@ -117,21 +174,30 @@ export class Parser {
   relations(): boolean {
     let temToken = this.lookahead
     if (this.table()) {
+      // 
       this.queryResult.fromList.push(temToken)
       let tem: positionAndToken =  this.getPosAndToken()
+      
       if (this.joinCondition()) {
         return true;
       }
-      this.setPosAndToken(tem)
+      else {
+        return false
+      }
+     
       return true;
     }
+    // 
+    this.error.errorInfos.push(new errorInfo('Expecting Identifier', this.lookahead.startPos))
     return false;
   }
 
   // grammar rule
   // TABLE -> id
   table(): boolean {
+    // 
     if (this.match(ID)) {
+      // 
       return true;
     }
     return false;
@@ -141,26 +207,45 @@ export class Parser {
   // JOINTYPE join TABLE on CONDITION
   // JOINTYPE join TABLE on CONDITION JOINCONDITION
   joinCondition(): boolean {
+    // 
     let tem: positionAndToken =  this.getPosAndToken()
-    if (this.joinType() && this.match(JOIN) ) {
-      let joinTable = this.lookahead.value
-      if(this.table() && this.match(ON)) {
-        this.queryResult.joinClause.setJoinTable(joinTable)
-        let result = this.condition()
-        if (result) {
-          this.queryResult.joinClause.setJoinCondition(result)
-          this.queryResult.joinClause.setIsUsed(true)
-          return true
+    let temJoinConditionCheck = true
+    if (this.joinType() ) {
+      temJoinConditionCheck = false
+      if (this.match(JOIN)) {
+        let joinTable = this.lookahead.value
+        if(this.table()) {
+          if( this.match(ON)) {
+            this.queryResult.joinClause.setJoinTable(joinTable)
+            let result = this.condition()
+            if (result) {
+              this.queryResult.joinClause.setJoinCondition(result)
+              this.queryResult.joinClause.setIsUsed(true)
+              return true
+            }
+          }
+          else {
+            this.error.errorInfos.push(new errorInfo("Expecting 'on' keyword", this.lookahead.startPos))
+          }
         }
+        else {
+          this.error.errorInfos.push(new errorInfo("Required table name", this.lookahead.startPos))
+        }
+      }
+      else {
+        this.error.errorInfos.push(new errorInfo("Expecting 'join' Keyword", this.lookahead.startPos))
       }
     }
     this.setPosAndToken(tem)
-    return true;
+    return temJoinConditionCheck;
   }
 
   joinType(): boolean {
+    // 
     let type = this.lookahead.type
-    if (this.match(INNER) || this.match(LEFT) || this.match(RIGHT) || this.match(FULL)) {
+    if ([INNER, LEFT, RIGHT, FULL].includes(type)) {
+      this.match(type)
+      
       this.queryResult.joinClause.setJoinType(type)
       return true;
     }
@@ -197,16 +282,17 @@ export class Parser {
       case STRING:
         this.match(STRING); return new ConstantNode(tok)
       default:
-        console.log("Syntax Error"); return false;
+        this.error.errorInfos.push(new errorInfo("Syntax error", this.lookahead.startPos)); return false;
     }
   }
 
   condition(): any {
     let left = this.orOperation()
+    if (!left) return false
     let opTok = this.lookahead
     if(this.match(AND)) {
       let right = this.condition()
-
+      if (!right) return false
       left = new BinaryOpNode(left, opTok, right)
     }
     return left
@@ -214,10 +300,11 @@ export class Parser {
 
   orOperation(): any {
     let left = this.simpleOperation()
+    if (!left) return false
     let opTok = this.lookahead
     if(this.match(OR)) {
       let right = this.orOperation()
-
+      if (!right) return false
       left = new BinaryOpNode(left, opTok, right)
     }
     return left
@@ -225,10 +312,11 @@ export class Parser {
 
   simpleOperation(): any {
     let left = this.constant1()
+    if (!left) return false
     let opTok = this.lookahead
     if(this.operator()) {
       let right = this.simpleOperation()
-
+      if (!right) return false
       left = new BinaryOpNode(left, opTok, right)
     }
 
@@ -241,7 +329,7 @@ export class Parser {
       }
       if(this.match(RIGHTPAREN)) {
         let right = new ArrayNode(temRight)
-
+        if (!right) return false
         left = new BinaryOpNode(left, opTok, right)
       }
     }
@@ -327,5 +415,16 @@ export class Parser {
       return true
     }
     return false
+  }
+
+  skipTokenUntilDelimeter(arrayOfTokenType: string[]): void {
+    while(true) {
+      let temTokenType = this.lookahead.type
+      if(arrayOfTokenType.includes(temTokenType)) {
+        // console.log(temTokenType)
+        break
+      }
+      else this.lookahead = this.getToken()
+    }
   }
 }

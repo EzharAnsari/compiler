@@ -1,11 +1,10 @@
-LINES -> LINE newLine LINES
-    | LINE
+LINES -> LINE semicolon LINES
+    | LINE semicolon
 
 LINE -> from RELATIONS where COND select COLUMNLIST
     | from RELATIONS select COLUMNLIST
 
-RELATIONS -> TABLE
-    | TABLE JOINCLOUSE
+RELATIONS -> TABLE JOINCLOUSE
 
 TABLE -> id     // from Orders 
 
@@ -54,8 +53,9 @@ JOINTYPE -> inner
   | right
   | full
 
-JOINCONDITION -> JOINTYPE join TABLE on CONDITION
-    | JOINTYPE join TABLE on CONDITION JOINCONDITION
+JOINCLOUSE -> JOINTYPE join TABLE on CONDITION
+    | JOINTYPE join TABLE on CONDITION JOINCLOUSE
+    | null
 
 
 /** example ***/
