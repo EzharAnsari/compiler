@@ -1,0 +1,41 @@
+
+/***************** Lexical Part **************************/
+
+Identifier::= Letter(Letter|Digit)∗
+Letter::= A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|S|T|U|V|W|Y|Z
+Constant::= Digit∗{.}Digit∗
+Digit::= 0|1|2|3|4|5|6|7|8|9
+Operator::= .|;|,|(|)|=|<|>|!|+|−|∗|/
+
+Note -> Terminal are all capital Letter and special character( like . , ; : < > ! / * - + ( $ = epsilon)) are shown as usual.
+     -> Non-Terminal are starting with capital Letter
+
+/***************** Grammar Rule **************************/
+
+Program            =>              DeclList
+DeclList           =>              DeclList Decl | Decl
+Decl               =>              VarDecl | FunDecl
+
+VarDecl            =>              TypeSpec VarDeclId ;
+VarDeclId          =>              ID
+TypeSpec           =>              INT
+
+//
+FunDecl            =>              TypeSpec FunDeclId ( Params ) BlockStmt
+FunDeclId          =>              ID
+Params             =>              Param , Params | Param
+Param              =>              TypeSpec ID
+
+Stmt               =>              ExpStmt | BlockStmt | AssignStmt
+ExpStmt            =>              Exp ; | ;
+BlockStmt          =>              { LocalDecls StmtList }
+LocalDecls         =>              LocalDecls VarDecl | VarDecl
+StmtList           =>              StmtList Stmt | Stmt
+AssignStmt         =>              ID = Exp
+
+Exp                =>              SimpleStmt Operation SimpleStmt | SimpleStmt
+Operation          =>              > | < 
+SimpleStmt         =>              SimpleStmt + Term | SimpleStmt - Term | Term
+Term               =>              Term * Factor | Term / Factor | Factor
+Factor             =>              ( Exp ) | NUM | ID
+
