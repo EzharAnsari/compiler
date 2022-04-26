@@ -2,23 +2,24 @@
 #define PARSER_H
 
 #include <stack>
-#include "Lexer/Scan.h"
+#include "../Lexer/Scan.h"
 #include "Node.h"
 
 class	Parser : Scanner	{
 public:
 	Parser(int argcount, char *args[]);
 	Parser(void);
-	bool	Parse(void);
+	bool	Parse(Node *n);
 private:
 	tokenType thisToken;
 	int TabIndex;
 	stack<Node *> stack;
 	tokenType Tokens[150];
+	int Tabs[150];
 	int TokenPtr;
 
 	bool Match(tokenType typ);
-	void GetTokens(void);
+	// void GetTokens(void);
 
 	bool Program(Node *root);
 	bool DeclList(Node *root);

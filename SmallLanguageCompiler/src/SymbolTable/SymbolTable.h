@@ -21,7 +21,7 @@ const int	nameTableSize = 200, hashTableSize = 100,
 
 const int maxLine = 121;
 
-const int numKeywords = 21, numTokens = 34, labelSize = 10;
+const int numKeywords = 21, numTokens = 36, labelSize = 10;
 
 // The tokens
 enum	tokenType {tokBegin, tokCall, tokDeclare, tokDo, 
@@ -155,40 +155,5 @@ class	SymbolTable	{
 		inline int min(int a, int b);
 };
 
-//	The key words and operators - used in initializing the symbol
-//	table
-char *keyString[] = {"begin", "call", "declare",
-										 "do", "else", "end", "endif", "enduntil", "endwhile",
-										 "if", "integer", "parameters", "procedure", "program",
-										 "read", "real", "set", "then", "until", "while",
-										 "write", "*", "+", "-", "/", "=", ";",
-										 ",", ".", ">", "<", "!", "(", ")", "_float"};
-
-//	The names of the token classes in a format that can
-//	be printed in a symbol table display
-char *tokclString[] = {"begin     ", "call      ",
-											 "declare   ", "do        ", "else      ", "end       ",
-											 "endif     ", "enduntil  ", "endwhile  ", "if        ",
-											 "integer   ", "parameters", "procedure ", "program   ",
-											 "read      ", "real      ", "set       ", "then      ",
-											 "until     ", "while     ", "write     ", "star      ",
-											 "plus      ", "minus     ", "slash     ", "equals    ",
-											 "semicolon ", "comma     ", "period    ", "greater   ",
-											 "less      ", "notequal  ", "openparen ", "closeparen",
-											 "float     ", "identifier", "constant  ", "error     ",
-											 "eof       ", "unknown   "};
-
-//	The names of the semantic types in a format that can be
-//	printed  in a symbol table display
-char *symTypeString[] = {"unknown  ", "keyword  ", "program  ",
-												 "parameter", "variable ", "temp. var",
-												 "constant ", "enum     ", "struct   ",
-												 "union    ", "procedure", "function ",
-												 "label    ", "literal  ", "operator "};
-
-//	The names of the data types in a format that can be
-//	printed  in a symbol table display
-char *dataTypeString[] = {"unknown", "none   ", "program",
-													"proced.", "integer", "real   "};
 
 #endif

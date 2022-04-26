@@ -8,7 +8,9 @@
 #include <ctype.h>
 #include <string.h>
 
+#ifndef SYMBOLTABLE_H
 #include "../SymbolTable/SymbolTable.h"
+#endif
 
 const int FileNameLen = 41;    // Maximum length of file names
 const int LexemLen = 81;       // Maximum length of lexems
@@ -20,6 +22,10 @@ class Scanner {
         Scanner(void);                        // Default Constructor                                                          
         ~Scanner(void);                       // The Destructor
         tokenType GetToken(int &TabIndex);    // Returns the next token to the parser
+        tokenType *Tokens[150];
+        int *TabIndex[150];
+        // void GetTokens(void);
+        void GetTokens(tokenType *token, int *tabIndexs);
         
     private:
         char Gettc(void);                             // Get the next character, updating the line count
@@ -31,6 +37,8 @@ class Scanner {
         bool FileFound(char * FileName);              // True if the file is found, false if not
         char LookAhead;                               // The lookahead character
         ifstream FileBuff;                            // The source file
+        
+
     protected:
         int LineNum;              // The current line number
 };

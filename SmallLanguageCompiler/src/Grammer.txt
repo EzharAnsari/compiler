@@ -12,7 +12,7 @@ Note -> Terminal are all capital Letter and special character( like . , ; : < > 
 
 /***************** Grammar Rule **************************/
 
-Program            =>              DeclList
+Program            =>              DeclList EOF
 DeclList           =>              DeclList Decl | Decl
 Decl               =>              VarDecl | FunDecl
 
@@ -29,7 +29,7 @@ Param              =>              TypeSpec ID
 Stmt               =>              ExpStmt | BlockStmt | AssignStmt
 ExpStmt            =>              Exp ; | ;
 BlockStmt          =>              { LocalDecls StmtList }
-LocalDecls         =>              LocalDecls VarDecl | VarDecl
+LocalDecls         =>              LocalDecls VarDecl ; | VarDecl ;
 StmtList           =>              StmtList Stmt | Stmt
 AssignStmt         =>              ID = Exp
 

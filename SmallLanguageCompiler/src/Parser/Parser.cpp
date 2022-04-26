@@ -2,20 +2,31 @@
 
 extern SymbolTable *st;
 
+
 Parser::Parser(int argcount, char *argv[]) : Scanner(argcount, argv)
 {
-    GetTokens();
+    // cout << "Done1" << endl;
+    GetTokens(Tokens, Tabs);
+    // cout << "Done1" << endl;
     TokenPtr = 0;
     thisToken = Tokens[TokenPtr];
+    // cout << "Current tokens type  " << Tokens[TokenPtr] << endl;
+
+}
+
+bool Parser::Parse(Node *n) {
+    return Program(n);
 }
 
 bool Parser::Program(Node *root)
 {
-    Node ChildNode;
-    if (DeclList(&ChildNode))
+    Node ChildNode, child1;
+    if (DeclList(&ChildNode) && Match(tokEof))
     {
+        child1.typ = "EOF";
         root->typ = "Program";
         root->children.push_back(ChildNode);
+        root->children.push_back(child1);
         return true;
     }
     return false;
@@ -25,14 +36,20 @@ bool Parser::Match(tokenType typ)
 {
     if (thisToken != typ)
     {
-        cout << "ERROR: expected TOKEN " << thisToken << " type identifier but next TOKEN was type " << typ << endl;
-        exit(1);
+        cout << "ERROR: expected TOKEN " << thisToken << " type but next TOKEN was type " << typ << endl;
+        // exit(1);
     }
 
     if (thisToken == typ)
     {
-        thisToken = Tokens[++TokenPtr];
+        TokenPtr++;
+        thisToken = Tokens[TokenPtr];
+        // cout << "Current tokens type  " << thisToken << endl;
         return true;
+    }
+    if(thisToken == tokEof) {
+        cout << "End of tokens" << endl;
+        // exit(3);
     }
     return false;
 }
@@ -48,18 +65,18 @@ bool Parser::DeclList(Node *root)
     int localPtr = TokenPtr;
     // DeclList Decl
     Node child1, child2;
-    if (Decl(&child1) && DeclList(&child2))
-    {
-        root->typ = "DeclList";
-        root->children.push_back(child1);
-        root->children.push_back(child2);
-        return true;
-    }
-
-    TokenPtr = localPtr;
     if (Decl(&child1))
     {
-        root = &child1;
+        if(DeclList(&child2)) {
+            root->typ = "DeclList";
+            root->children.push_back(child1);
+            root->children.push_back(child2);
+            cout << root->typ << endl;
+            return true;
+        }
+
+        root->typ = "DeclList";
+        root->children.push_back(child1);
         return true;
     }
     TokenPtr = localPtr;
@@ -101,6 +118,7 @@ bool Parser::VarDecl(Node *root)
         root->children.push_back(child2);
         root->children.push_back(child3);
         // Action DeclareVar
+        // cout << "hee" << endl;
         return true;
     }
 
@@ -182,7 +200,7 @@ bool Parser::FunDecl(Node *root)
 
 bool Parser::Params(Node *root) {
     int localPtr = TokenPtr;
-    Node *param, params, comma;
+    Node param, params, comma;
     if (Param(&param) && Match(tokComma) &&Params(&params)) {
         comma.typ = ",";
         root->typ = "Parameters";
@@ -216,7 +234,7 @@ bool Parser::Param(Node *root) {
 
 bool Parser::Stmt(Node *root) {
     int localPtr = TokenPtr;
-    Node *child;
+    Node child;
     if(ExpStmt(&child)) {
         root->typ = "Statement";
         root->children.push_back(child);
@@ -398,7 +416,7 @@ bool Parser::Term(Node *n) {
     int localPtr = TokenPtr;
     Node child1, child2, child3;
     if (Factor(&child1)) {
-        if (Match(tokMultiply) && Term(&child3)) {
+        if (Match(tokStar) && Term(&child3)) {
             child2.typ = "*";
             n->typ = "Term";
             n->children.push_back(child1);
@@ -407,7 +425,7 @@ bool Parser::Term(Node *n) {
             return true;
         }
 
-        else if (Match(tokDivide) && Term(&child3)) {
+        else if (Match(tokSlash) && Term(&child3)) {
             child2.typ = "/";
             n->typ = "Term";
             n->children.push_back(child1);
@@ -444,14 +462,14 @@ bool Parser::Factor(Node *n) {
     if(Match(tokInteger)) {
         child.typ = "Integer";
         n->typ = "Factor";
-        n->children.push_back(child1);
+        n->children.push_back(child);
         return true;
     }
     TokenPtr = localPtr;
     if(Match(tokIdentifier)) {
         child.typ = "Identifier";
         n->typ = "Factor";
-        n->children.push_back(child1);
+        n->children.push_back(child);
         return true;
     }
     TokenPtr = localPtr;

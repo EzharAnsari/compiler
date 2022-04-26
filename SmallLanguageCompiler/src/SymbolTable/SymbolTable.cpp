@@ -1,5 +1,41 @@
 #include "SymbolTable.h"
 
+//	The key words and operators - used in initializing the symbol
+//	table
+char *keyString[] = {"begin", "call", "declare",
+										 "do", "else", "end", "endif", "enduntil", "endwhile",
+										 "if", "integer", "parameters", "procedure", "program",
+										 "read", "real", "set", "then", "until", "while",
+										 "write", "*", "+", "-", "/", "=", ";",
+										 ",", ".", ">", "<", "!", "(", ")", "{", "}", "_float"};
+
+//	The names of the token classes in a format that can
+//	be printed in a symbol table display
+char *tokclString[] = {"begin     ", "call      ",
+											 "declare   ", "do        ", "else      ", "end       ",
+											 "endif     ", "enduntil  ", "endwhile  ", "if        ",
+											 "integer   ", "parameters", "procedure ", "program   ",
+											 "read      ", "real      ", "set       ", "then      ",
+											 "until     ", "while     ", "write     ", "star      ",
+											 "plus      ", "minus     ", "slash     ", "equals    ",
+											 "semicolon ", "comma     ", "period    ", "greater   ",
+											 "less      ", "notequal  ", "openparen ", "closeparen",
+											 "openbrak  ", "closebrak ", "float     ", "identifier",
+											 "constant  ", "error     ", "eof       ", "unknown   "};
+
+//	The names of the semantic types in a format that can be
+//	printed  in a symbol table display
+char *symTypeString[] = {"unknown  ", "keyword  ", "program  ",
+												 "parameter", "variable ", "temp. var",
+												 "constant ", "enum     ", "struct   ",
+												 "union    ", "procedure", "function ",
+												 "label    ", "literal  ", "operator "};
+
+//	The names of the data types in a format that can be
+//	printed  in a symbol table display
+char *dataTypeString[] = {"unknown", "none   ", "program",
+													"proced.", "integer", "real   "};
+
 
 // symboltable() -	The initializing constructor for
 //					the symbol table

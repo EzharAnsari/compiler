@@ -70,13 +70,7 @@ char Scanner::FirstChar(void) {
     while (!GoodChar)
     {
         while (!FileBuff.eof() && isspace(c = Gettc()));
-
-        if (c != '{')
-            GoodChar = true;
-        else {
-            // Skip the comment
-            while (!FileBuff.eof() && (c = Gettc() != '}')) ;
-        }
+        GoodChar = true;
     }
 
     if (FileBuff.eof())
@@ -88,16 +82,15 @@ char Scanner::FirstChar(void) {
 // Gettc() -	Fetches a character from a file.  It uses getc and adjusts
 //		the line number count when necessary.
 char Scanner::Gettc(void) {
-    char c;
-
-    if (FileBuff.eof()) {
-        c = '\0';
-        return c;
-    }
+    char c = '\0';
     
-    else if ((c = FileBuff.get()) == '\n')
-        LineNum++;
-    return(tolower(c));
+    if (FileBuff.get(c)) {
+        if(c == '\n')
+            LineNum++;
+        return(tolower(c));
+    }
+
+    return c;
 }
 
 // ungettc() -	Returns a character to the file.  Uses ungetc and will
@@ -113,17 +106,13 @@ void Scanner::Ungettc(char c) {
 //				and return the corresponding token class 
 //				to the parser.
 tokenType Scanner::GetToken(int &TabIndex) {
-    char c;
+    char c=LookAhead;
 
-    if ((c = LookAhead) == EndOfFile)
+    if (c == EndOfFile)
         return(tokEof);
     // If it begins with a letter, it is a word.  If
 	// begins with a digit, it is a number.  Otherwise,
 	// it is an Operator | Error.
-    int i = c;
-    if (i < 0) {
-        return(tokEof);
-    }
     LookAhead = Gettc();
     if (isalpha(c)) {
         return(ScanWord(c, TabIndex));
@@ -244,3 +233,39 @@ tokenType Scanner::ScanOp(char c, int &TabIndex) {
     return(st->getTokClass(TabIndex));
 }
 
+// void Scanner::GetTokens(void) {
+//     int i=0;
+//     bool f = true;
+//     int tab[150];
+//     tokenType tok[150];
+
+//     while(!FileBuff.eof() && f) {    
+//         tok[i] = GetToken(tab[i]);
+//         TabIndex[i] = &tab[i];
+//         Tokens[i] = &tok[i];
+//         if(tok[i] == tokEof)
+//             f= false;
+        
+//         i++;
+//     }
+
+//     FileBuff.close();
+
+// }
+
+void Scanner::GetTokens(tokenType *token, int *tabIndexs) {
+    int i=0;
+    bool f = true;
+
+    while(!FileBuff.eof() && f) {
+
+        token[i] = GetToken(tabIndexs[i]);
+        if(token[i] == tokEof)
+            f= false;
+        // cout << "Token type  " << token[i] << endl;
+        i++;
+    }
+
+    FileBuff.close();
+
+}
