@@ -1,1 +1,7 @@
-int
+integer v;
+integer t;
+
+integer fun(integer a) {
+    integer d;
+    d = a;
+}

@@ -18,8 +18,8 @@ const char EndOfFile = '\0';   // Endicating "End Of File"
 
 class Scanner {
     public:
-        Scanner(int argc, char *argv[]);      // Constructor that gets the file name
-        Scanner(void);                        // Default Constructor                                                          
+        void ScannerInit(int argc, char *argv[]);      // Constructor that gets the file name
+        // Scanner(void);                        // Default Constructor                                                          
         ~Scanner(void);                       // The Destructor
         tokenType GetToken(int &TabIndex);    // Returns the next token to the parser
         tokenType *Tokens[150];

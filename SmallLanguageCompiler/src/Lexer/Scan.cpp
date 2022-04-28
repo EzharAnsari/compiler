@@ -2,14 +2,17 @@
 
 extern SymbolTable *st;
 
-Scanner::Scanner(int argc, char *argv[]) {
+void Scanner::ScannerInit(int argc, char *argv[]) {
     char FileName[FileNameLen];
+    char tem[] = "example.txt";
 
     switch (argc)
     {
     case 1:
         cout << "File name\t?";
-        cin >> FileName;
+        // cin >> FileName;
+        strcpy(FileName, tem);
+        
         break;
     case 2:
         strcpy(FileName, argv[1]);

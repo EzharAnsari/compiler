@@ -10,6 +10,9 @@ public:
 	Parser(int argcount, char *args[]);
 	Parser(void);
 	bool	Parse(Node *n);
+	Scanner sc;
+	int set(void);
+	void reset(int value);
 private:
 	tokenType thisToken;
 	int TabIndex;

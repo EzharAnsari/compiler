@@ -148,7 +148,7 @@ class	SymbolTable	{
 		attribTabType attribTable[attribTableSize];
 		int hashTable[hashTableSize];
 		// The lengths of the string table, name table and attribute table
-		int strTabLen, namTabLen, attribTabLen;
+		int strTabLen=0, namTabLen=0, attribTabLen=0;
 
 		procStackItem thisProc;	// A stack entry for the current procedure
 		stack <procStackItem>	ps;	// The procedure stack

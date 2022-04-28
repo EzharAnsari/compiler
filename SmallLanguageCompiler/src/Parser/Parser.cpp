@@ -3,15 +3,22 @@
 extern SymbolTable *st;
 
 
-Parser::Parser(int argcount, char *argv[]) : Scanner(argcount, argv)
+Parser::Parser(int argcount, char *argv[])
 {
-    // cout << "Done1" << endl;
-    GetTokens(Tokens, Tabs);
-    // cout << "Done1" << endl;
+    sc.ScannerInit(argcount, argv);
+    sc.GetTokens(Tokens, Tabs);
     TokenPtr = 0;
     thisToken = Tokens[TokenPtr];
-    // cout << "Current tokens type  " << Tokens[TokenPtr] << endl;
 
+}
+
+int Parser::set(void) {
+    return TokenPtr;
+}
+
+void Parser::reset(int val) {
+    TokenPtr = val;
+    thisToken = Tokens[TokenPtr];
 }
 
 bool Parser::Parse(Node *n) {
@@ -44,26 +51,17 @@ bool Parser::Match(tokenType typ)
     {
         TokenPtr++;
         thisToken = Tokens[TokenPtr];
-        // cout << "Current tokens type  " << thisToken << endl;
         return true;
     }
     if(thisToken == tokEof) {
         cout << "End of tokens" << endl;
-        // exit(3);
     }
     return false;
 }
 
-// Goal
-//  Every production function return bool which indicate whether its accepeted by its production rule or not
-//  it takes a pointer of node as argument
-//  if production function return true then pointer points a tree corrensponding to that production rule
-
-
 bool Parser::DeclList(Node *root)
 {
-    int localPtr = TokenPtr;
-    // DeclList Decl
+    int localPtr = set();
     Node child1, child2;
     if (Decl(&child1))
     {
@@ -79,13 +77,13 @@ bool Parser::DeclList(Node *root)
         root->children.push_back(child1);
         return true;
     }
-    TokenPtr = localPtr;
+    reset(localPtr);
     return false;
 }
 
 bool Parser::Decl(Node *root)
 {
-    int localPtr = TokenPtr;
+    int localPtr = set();
     Node child;
     if (VarDecl(&child))
     {
@@ -94,7 +92,7 @@ bool Parser::Decl(Node *root)
         return true;
     }
 
-    TokenPtr = localPtr;
+    reset(localPtr);
     if (FunDecl(&child))
     {
         root->typ = "FunctionDecl";
@@ -102,13 +100,13 @@ bool Parser::Decl(Node *root)
         return true;
     }
 
-    TokenPtr = localPtr;
+    reset(localPtr);
     return false;
 }
 
 bool Parser::VarDecl(Node *root)
 {
-    int localPtr = TokenPtr;
+    int localPtr = set();
     Node child1, child2, child3;
     if (TypeSpec(&child1) && VarDeclId(&child2) && Match(tokSemicolon))
     {
@@ -122,7 +120,7 @@ bool Parser::VarDecl(Node *root)
         return true;
     }
 
-    TokenPtr = localPtr;
+    reset(localPtr);
     return false;
 }
 
@@ -171,7 +169,7 @@ bool Parser::FunDeclId(Node *root)
 bool Parser::FunDecl(Node *root)
 {
     Node typ, Id, openP, params, closeP, blockStmt;
-    int localPtr = TokenPtr;
+    int localPtr = set();
     if (TypeSpec(&typ) && FunDeclId(&Id))
     {
         if (Match(tokOpenparen))
@@ -194,12 +192,12 @@ bool Parser::FunDecl(Node *root)
             }
         }
     }
-    TokenPtr = localPtr;
+    reset(localPtr);
     return false;
 }
 
 bool Parser::Params(Node *root) {
-    int localPtr = TokenPtr;
+    int localPtr = set();
     Node param, params, comma;
     if (Param(&param) && Match(tokComma) &&Params(&params)) {
         comma.typ = ",";
@@ -209,13 +207,14 @@ bool Parser::Params(Node *root) {
         root->children.push_back(params);
         return true;
     }
-    TokenPtr = localPtr;
+    reset(localPtr);
     if(Param(&param)) {
-        root = &param;
+        root->typ = "Parameters";
+        root->children.push_back(param);
         return true;
     }
 
-    TokenPtr = localPtr;
+    reset(localPtr);
     return false;
 }
 
@@ -233,31 +232,31 @@ bool Parser::Param(Node *root) {
 }
 
 bool Parser::Stmt(Node *root) {
-    int localPtr = TokenPtr;
+    int localPtr = set();
     Node child;
     if(ExpStmt(&child)) {
         root->typ = "Statement";
         root->children.push_back(child);
         return true;
     }
-    TokenPtr = localPtr;
+    reset(localPtr);
     if(BlockStmt(&child)) {
         root->typ = "Statement";
         root->children.push_back(child);
         return true;
     }
-    TokenPtr = localPtr;
+    reset(localPtr);
     if(AssignStmt(&child)) {
         root->typ = "Statement";
         root->children.push_back(child);
         return true;
     }
-    TokenPtr = localPtr;
+    reset(localPtr);
     return false; 
 }
 
 bool Parser::BlockStmt(Node *root) {
-    int localPtr = TokenPtr;
+    int localPtr = set();
     Node openB, closeB, localDic, stmts;
     if(Match(tokOpenBracket) && LocalDecls(&localDic) && Stmts(&stmts) && Match(tokCloseBracket)) {
         openB.typ = "{";
@@ -268,12 +267,12 @@ bool Parser::BlockStmt(Node *root) {
         return true;
     }
 
-    TokenPtr = localPtr;
+    reset(localPtr);
     return false;
 }
 
 bool Parser::LocalDecls(Node *n) {
-    int localPtr = TokenPtr;
+    int localPtr = set();
     Node child1, child2;
     if (VarDecl(&child1) && LocalDecls(&child2)) {
         n->typ = "LocalDecls";
@@ -281,18 +280,18 @@ bool Parser::LocalDecls(Node *n) {
         n->children.push_back(child2);
         return true;
     }
-    TokenPtr = localPtr;
+    reset(localPtr);
     if (VarDecl(&child1)) {
         n->typ = "LocalDecls";
         n->children.push_back(child1);
         return true;
     }
-    TokenPtr = localPtr;
+    reset(localPtr);
     return false;
 }
 
 bool Parser::Stmts(Node *n) {
-    int localPtr = TokenPtr;
+    int localPtr = set();
     Node child1, child2; 
     if (Stmt(&child1) && Stmts(&child2)) {
         n->typ = "Statements";
@@ -300,18 +299,18 @@ bool Parser::Stmts(Node *n) {
         n->children.push_back(child2);
         return true;
     }
-    TokenPtr = localPtr;
+    reset(localPtr);
     if (Stmt(&child1)) {
         n->typ = "Statements";
         n->children.push_back(child1);
         return true;
     }
-    TokenPtr = localPtr;
+    reset(localPtr);
     return false;
 }
 
 bool Parser::AssignStmt(Node *n) {
-    int localPtr = TokenPtr;
+    int localPtr = set();
     Node child;
     if(Match(tokIdentifier) && Match(tokEquals) && ExpStmt(&child)) {
         Node child1, child2;
@@ -323,12 +322,12 @@ bool Parser::AssignStmt(Node *n) {
         n->children.push_back(child);
         return true;
     }
-    TokenPtr = localPtr;
+    reset(localPtr);
     return false;
 }
 
 bool Parser::ExpStmt(Node *n) {
-    int localPtr = TokenPtr;
+    int localPtr = set();
     Node child;
     if(Exp(&child) && Match(tokSemicolon)) {
         Node child1;
@@ -338,12 +337,12 @@ bool Parser::ExpStmt(Node *n) {
         n->children.push_back(child1);
         return true;
     }
-    TokenPtr = localPtr;
+    reset(localPtr);
     return false;
 }
 
 bool Parser::Exp(Node *n) {
-    int localPtr = TokenPtr;
+    int localPtr = set();
     Node child1, child2, child3;
     if (SimpleStmt(&child1) && Operation(&child2) && SimpleStmt(&child3)) {
         n->typ = "Expresssion";
@@ -352,13 +351,13 @@ bool Parser::Exp(Node *n) {
         n->children.push_back(child3);
         return true;
     }
-    TokenPtr = localPtr;
+    reset(localPtr);
     if (SimpleStmt(&child1)) {
         n->typ = "Expresssion";
         n->children.push_back(child1);
         return true;
     }
-    TokenPtr = localPtr;
+    reset(localPtr);
     return false;
 }
 
@@ -380,7 +379,7 @@ bool Parser::Operation(Node *n) {
 }
 
 bool Parser::SimpleStmt(Node *n) {
-    int localPtr = TokenPtr;
+    int localPtr = set();
     Node child1, child2, child3;
     if (Term(&child1)) {
         if (Match(tokPlus) && SimpleStmt(&child3)) {
@@ -408,12 +407,12 @@ bool Parser::SimpleStmt(Node *n) {
         }
     }
 
-    TokenPtr = localPtr;
+    reset(localPtr);
     return false;
 }
 
 bool Parser::Term(Node *n) {
-    int localPtr = TokenPtr;
+    int localPtr = set();
     Node child1, child2, child3;
     if (Factor(&child1)) {
         if (Match(tokStar) && Term(&child3)) {
@@ -441,12 +440,12 @@ bool Parser::Term(Node *n) {
         }
     }
 
-    TokenPtr = localPtr;
+    reset(localPtr);
     return false;
 }
 
 bool Parser::Factor(Node *n) {
-    int localPtr = TokenPtr;
+    int localPtr = set();
     Node child;
     if (Match(tokOpenparen) && Exp(&child) && Match(tokCloseparen)) {
         Node child1, child2;
@@ -458,21 +457,21 @@ bool Parser::Factor(Node *n) {
         n->children.push_back(child2);
         return true;
     }
-    TokenPtr = localPtr;
+    reset(localPtr);
     if(Match(tokInteger)) {
         child.typ = "Integer";
         n->typ = "Factor";
         n->children.push_back(child);
         return true;
     }
-    TokenPtr = localPtr;
+    reset(localPtr);
     if(Match(tokIdentifier)) {
         child.typ = "Identifier";
         n->typ = "Factor";
         n->children.push_back(child);
         return true;
     }
-    TokenPtr = localPtr;
+    reset(localPtr);
     return false;
 }
 

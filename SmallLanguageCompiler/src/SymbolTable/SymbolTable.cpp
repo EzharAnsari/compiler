@@ -114,8 +114,9 @@ bool SymbolTable::installName(char string[], int &tabIndex) {
 	// (linking it to its previous entry if necessary) and
 	// create an entry in the attribute table with the
 	// bare essentials.
-	nameTable[nameIndex = namTabLen++].strstart = strTabLen;
-
+	nameIndex = namTabLen++;
+	nameTable[nameIndex].strstart = strTabLen;
+	
 	for( i = 0; i < length; i++)
 		stringTable[strTabLen++] = string[i];
 	stringTable[strTabLen++] = '\0';
