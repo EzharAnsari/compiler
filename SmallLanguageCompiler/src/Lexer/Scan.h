@@ -26,6 +26,7 @@ class Scanner {
         int *TabIndex[150];
         // void GetTokens(void);
         void GetTokens(tokenType *token, int *tabIndexs);
+        int LineNum;              // The current line number
         
     private:
         char Gettc(void);                             // Get the next character, updating the line count
@@ -38,9 +39,6 @@ class Scanner {
         char LookAhead;                               // The lookahead character
         ifstream FileBuff;                            // The source file
         
-
-    protected:
-        int LineNum;              // The current line number
 };
 
 #endif
