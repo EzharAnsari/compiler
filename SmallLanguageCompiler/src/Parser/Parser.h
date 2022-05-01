@@ -36,6 +36,10 @@ private:
 	bool FunDecl(Node *root);
 	bool Params(Node *root);
 	bool Param(Node *root);
+	bool FuncStmt(Node *n);
+	bool FuncStmtHelper(Node *n);
+	bool FunVarDecAndStmt(Node *n);
+	bool LocalDecl(Node *n); 
 	bool Stmt(Node *root);
 
 	bool BlockStmt(Node *n);
