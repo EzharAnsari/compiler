@@ -12,7 +12,7 @@ void Display(Node *root, int tabs) {
         for(int j=0; j<4; j++) {
             cout << " ";
         }
-        cout << "";
+        cout << "|";
     }
     cout <<  root->typ << endl;
     // cout << root->children.size() << endl;

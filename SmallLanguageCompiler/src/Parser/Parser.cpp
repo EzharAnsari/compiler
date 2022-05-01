@@ -475,3 +475,14 @@ bool Parser::Factor(Node *n) {
     return false;
 }
 
+enum actiontype {  AcPushReal, AcPushInt, AcDeclVar, AcDeclParam,}
+
+void ProcessAction(int ActionType) {
+    switch(ActionType) {
+        case AcPushReal: PushReal(Node *n); break;
+        case AcPushInt: PushInt(Node *n); break;
+        case AcDeclVar: DeclareVar(Node *n); break;
+    }
+}
+
+// Action Definition

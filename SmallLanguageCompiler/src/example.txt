@@ -3,5 +3,5 @@ integer t;
 
 integer fun(integer a) {
     integer d;
-    d = a;
+    d = a + b;
 }
