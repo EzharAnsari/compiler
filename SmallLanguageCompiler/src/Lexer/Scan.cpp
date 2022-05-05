@@ -213,7 +213,7 @@ tokenType Scanner::ScanNum(char c, int &TabIndex) {
     }
 
     Ungettc(LookAhead);
-    return(st->getTokClass(TabIndex)); 
+    return(st->getTokClass(TabIndex));
 }
 
 // ScanOp() -	Scan for an operator, which is a single character

@@ -3,7 +3,7 @@
 
 struct Node{
     std::string typ;
-    int SymbolEntry;
+    int SymbolEntry = -1;
     vector<Node> children;
 };
 

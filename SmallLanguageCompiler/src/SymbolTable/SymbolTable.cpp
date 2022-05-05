@@ -385,11 +385,7 @@ int SymbolTable::min(int a, int b) {
 	return ((a < b) ? a : b);
 }
 
-int SymbolTable::OpenScope(int TabIndex) {
-	int NewTabIndex, NameIndex;
-
-	NameIndex = attribTable[TabIndex].thisname;
-
-	
+int SymbolTable::OpenScope(int TabIndex, int scope) {
+	attribTable[TabIndex].outerscope = scope;
 }
 

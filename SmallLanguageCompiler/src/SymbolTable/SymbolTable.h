@@ -131,7 +131,7 @@ class	SymbolTable	{
 		void custum(void);
 
 		// Function that handle name scoping
-		int		OpenScope(int TabIndex);          // Opens a new scope
+		int		OpenScope(int TabIndex, int scope);          // Opens a new scope
 		void	CloseScope(void);                 // Closes the scope	
 
 	protected:

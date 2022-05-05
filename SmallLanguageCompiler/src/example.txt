@@ -1,15 +1,6 @@
 integer v;
 integer t;
 
-integer fun(integer c) {
+integer fun(integer a) {
     integer d;
-    integer d;
-    d = a + b * c;
-    c = a > b;
-    a = b;
 }
-
-integer d;
-integer d;
-integer d;
-integer d;

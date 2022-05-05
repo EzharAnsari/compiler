@@ -21,8 +21,7 @@ private:
 	int Tabs[150];
 	int TokenPtr;
 
-	bool Match(tokenType typ);
-	// void GetTokens(void);
+	bool Match(tokenType typ, int &tabIndex);
 
 	bool Program(Node *root);
 	bool DeclList(Node *root);
@@ -53,10 +52,6 @@ private:
 	bool SimpleStmt(Node *n);
 	bool Term(Node *n);
 	bool Factor(Node *n);
-
-
-
-
 };
 
 #endif
