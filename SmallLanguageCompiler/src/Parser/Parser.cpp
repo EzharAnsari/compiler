@@ -28,9 +28,11 @@ bool Parser::Parse(Node *n) {
 bool Parser::Program(Node *root)
 {
     Node ChildNode, child1;
-    if (DeclList(&ChildNode) && Match(tokEof))
+    int tabIndex;
+    if (DeclList(&ChildNode) && Match(tokEof, tabIndex))
     {
         child1.typ = "EOF";
+        child1.SymbolEntry = tabIndex;
         root->typ = "Program";
         root->children = ChildNode.children;
         root->children.push_back(child1);
@@ -39,7 +41,7 @@ bool Parser::Program(Node *root)
     return false;
 }
 
-bool Parser::Match(tokenType typ)
+bool Parser::Match(tokenType typ, int &tabIndex)
 {
     if (thisToken != typ)
     {
@@ -49,6 +51,7 @@ bool Parser::Match(tokenType typ)
 
     if (thisToken == typ)
     {
+        tabIndex = Tabs[TokenPtr];
         TokenPtr++;
         thisToken = Tokens[TokenPtr];
         return true;
@@ -103,9 +106,11 @@ bool Parser::VarDecl(Node *root)
 {
     int localPtr = set();
     Node child1, child2, child3;
-    if (TypeSpec(&child1) && VarDeclId(&child2) && Match(tokSemicolon))
+    int tabIndex;
+    if (TypeSpec(&child1) && VarDeclId(&child2) && Match(tokSemicolon, tabIndex))
     {
         child3.typ = ";";
+        child3.SymbolEntry = tabIndex;
         root->typ = "VariableDecl";
         root->children.push_back(child1);
         root->children.push_back(child2);
@@ -120,10 +125,12 @@ bool Parser::VarDecl(Node *root)
 
 bool Parser::VarDeclId(Node *root)
 {
-    if (Match(tokIdentifier))
+    int tabIndex;
+    if (Match(tokIdentifier, tabIndex))
     {
         Node child;
         child.typ = "Identifier";
+        child.SymbolEntry = tabIndex;
         root->typ = "VarDeclId";
         root->children.push_back(child);
         return true;
@@ -135,9 +142,11 @@ bool Parser::VarDeclId(Node *root)
 bool Parser::TypeSpec(Node *root)
 {
     Node child;
-    if (Match(tokInteger))
+    int tabIndex;
+    if (Match(tokInteger, tabIndex))
     {
         child.typ = "Integer";
+        child.SymbolEntry = tabIndex;
         root->typ = "TypeSpec";
         root->children.push_back(child);
         return true;
@@ -148,10 +157,12 @@ bool Parser::TypeSpec(Node *root)
 
 bool Parser::FunDeclId(Node *root)
 {
-    if (Match(tokIdentifier))
+    int tabIndex;
+    if (Match(tokIdentifier, tabIndex))
     {
         Node child;
         child.typ = "Identifier";
+        child.SymbolEntry = tabIndex;
         root->typ = "FunDeclId";
         root->children.push_back(child);
         return true;
@@ -163,14 +174,15 @@ bool Parser::FunDeclId(Node *root)
 bool Parser::FunDecl(Node *root)
 {
     Node typ, Id, params, blockStmt;
+    int tabIndex;
     int localPtr = set();
     if (TypeSpec(&typ) && FunDeclId(&Id))
     {
-        if (Match(tokOpenparen))
+        if (Match(tokOpenparen, tabIndex))
         {
-            if (Params(&params) && Match(tokCloseparen))
+            if (Params(&params) && Match(tokCloseparen, tabIndex))
             {
-                if (Match(tokOpenBracket) && FuncStmt(&blockStmt) && Match(tokCloseBracket))
+                if (Match(tokOpenBracket, tabIndex) && FuncStmt(&blockStmt) && Match(tokCloseBracket, tabIndex))
                 {
                     root->typ = "FunctionDecl";
                     root->children.push_back(typ);
@@ -241,7 +253,8 @@ bool Parser::FunVarDecAndStmt(Node *root) {
 bool Parser::LocalDecl(Node *root) {
     int localPtr = set();
     Node child1, child2, child3;
-    if (TypeSpec(&child1) && VarDeclId(&child2) && Match(tokSemicolon))
+    int tabIndex;
+    if (TypeSpec(&child1) && VarDeclId(&child2) && Match(tokSemicolon, tabIndex))
     {
         child3.typ = ";";
         root->typ = "LocalVarDecl";
@@ -259,10 +272,11 @@ bool Parser::LocalDecl(Node *root) {
 bool Parser::Params(Node *root) {
     int localPtr = set();
     Node param;
+    int tabIndex;
     root->typ = "Parameters";
     while (Param(&param)) {
         root->children.push_back(param);
-        Match(tokComma);
+        Match(tokComma, tabIndex);
         Node tem;
         param = tem;
         localPtr = set();
@@ -273,8 +287,10 @@ bool Parser::Params(Node *root) {
 
 bool Parser::Param(Node *root) {
     Node typ, id;
-    if(TypeSpec(&typ) && Match(tokIdentifier)) {
+    int tabIndex;
+    if(TypeSpec(&typ) && Match(tokIdentifier, tabIndex)) {
         id.typ = "Identifier";
+        id.SymbolEntry = tabIndex;
         root->typ = "Parameter";
         root->children.push_back(typ);
         root->children.push_back(id);
@@ -311,7 +327,8 @@ bool Parser::Stmt(Node *root) {
 bool Parser::BlockStmt(Node *root) {
     int localPtr = set();
     Node child, child1;
-    if(Match(tokOpenBracket) && FuncStmtHelper(&child) && Match(tokCloseBracket)) {
+    int tabIndex;
+    if(Match(tokOpenBracket, tabIndex) && FuncStmtHelper(&child) && Match(tokCloseBracket, tabIndex)) {
         root->typ = "BlockStmt";
         root->children.push_back(child);
         child = child1;
@@ -363,10 +380,13 @@ bool Parser::Stmts(Node *n) {
 bool Parser::AssignStmt(Node *n) {
     int localPtr = set();
     Node child;
-    if(Match(tokIdentifier) && Match(tokEquals) && ExpStmt(&child)) {
+    int tabIndex, tabIndex1;
+    if(Match(tokIdentifier, tabIndex) && Match(tokEquals, tabIndex1) && ExpStmt(&child)) {
         Node child1, child2;
         child1.typ = "Identifier";
+        child1.SymbolEntry = tabIndex;
         child2.typ = "=";
+        child2.SymbolEntry = tabIndex1;
         n->typ = "Assignment";
         n->children.push_back(child1);
         n->children.push_back(child2);
@@ -380,7 +400,8 @@ bool Parser::AssignStmt(Node *n) {
 bool Parser::ExpStmt(Node *n) {
     int localPtr = set();
     Node child;
-    if(Exp(&child) && Match(tokSemicolon)) {
+    int tabIndex;
+    if(Exp(&child) && Match(tokSemicolon, tabIndex)) {
         n->typ = child.typ;        
         n->children = child.children;
         return true;
@@ -413,14 +434,17 @@ bool Parser::Exp(Node *n) {
 
 bool Parser::Operation(Node *n) {
     Node child;
-    if(Match(tokLess)) {
+    int tabIndex;
+    if(Match(tokLess, tabIndex)) {
         child.typ = "<";
+        child.SymbolEntry = tabIndex;
         n->typ = "Operation";
         n->children.push_back(child);
         return true;
     }
-    if(Match(tokGreater)) {
+    if(Match(tokGreater, tabIndex)) {
         child.typ = ">";
+        child.SymbolEntry = tabIndex;
         n->typ = "Operation";
         n->children.push_back(child);
         return true;
@@ -431,10 +455,12 @@ bool Parser::Operation(Node *n) {
 bool Parser::SimpleStmt(Node *n) {
     int localPtr = set();
     Node left, op, right;
+    int tabIndex;
     if (Term(&left)) {
         localPtr = set();
-        if (Match(tokPlus) && SimpleStmt(&right)) {
+        if (Match(tokPlus, tabIndex) && SimpleStmt(&right)) {
             op.typ = "+";
+            op.SymbolEntry = tabIndex;
             n->typ = "AdditionStatement";
             op.children.push_back(left);
             op.children.push_back(right);
@@ -443,8 +469,9 @@ bool Parser::SimpleStmt(Node *n) {
         }
         reset(localPtr);
 
-        if (Match(tokMinus) && SimpleStmt(&right)) {
+        if (Match(tokMinus, tabIndex) && SimpleStmt(&right)) {
             op.typ = "-";
+            op.SymbolEntry = tabIndex;
             n->typ = "SubstractStatement";
             op.children.push_back(left);
             op.children.push_back(right);
@@ -465,10 +492,12 @@ bool Parser::SimpleStmt(Node *n) {
 bool Parser::Term(Node *n) {
     int localPtr = set();
     Node left, op, right;
+    int tabIndex;
     if (Factor(&left)) {
         localPtr = set();
-        if (Match(tokStar) && Term(&right)) {
+        if (Match(tokStar, tabIndex) && Term(&right)) {
             op.typ = "*";
+            op.SymbolEntry = tabIndex;
             n->typ = "MultiplicationStatement";
             op.children.push_back(left);
             op.children.push_back(right);
@@ -477,8 +506,9 @@ bool Parser::Term(Node *n) {
         }
         reset(localPtr);
 
-        if (Match(tokMinus) && Term(&right)) {
+        if (Match(tokMinus, tabIndex) && Term(&right)) {
             op.typ = "/";
+            op.SymbolEntry = tabIndex;
             n->typ = "DivideStatement";
             op.children.push_back(left);
             op.children.push_back(right);
@@ -499,7 +529,8 @@ bool Parser::Term(Node *n) {
 bool Parser::Factor(Node *n) {
     int localPtr = set();
     Node child;
-    if (Match(tokOpenparen) && Exp(&child) && Match(tokCloseparen)) {
+    int tabIndex;
+    if (Match(tokOpenparen, tabIndex) && Exp(&child) && Match(tokCloseparen, tabIndex)) {
         Node child1, child2;
         child1.typ = "(";
         child2.typ = ")";
@@ -510,15 +541,17 @@ bool Parser::Factor(Node *n) {
         return true;
     }
     reset(localPtr);
-    if(Match(tokInteger)) {
+    if(Match(tokInteger, tabIndex)) {
         child.typ = "Integer";
+        child.SymbolEntry = tabIndex;
         n->typ = "Factor";
         n->children.push_back(child);
         return true;
     }
     reset(localPtr);
-    if(Match(tokIdentifier)) {
+    if(Match(tokIdentifier, tabIndex)) {
         child.typ = "Identifier";
+        child.SymbolEntry = tabIndex;
         n->typ = "Factor";
         n->children.push_back(child);
         return true;
